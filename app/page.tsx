@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { airports, cardEcosystems } from "./data";
+import { airports, cardEcosystems, transferPartners } from "./data";
 import {
   FlightDeal,
   getCentsPerMile,
@@ -354,6 +354,7 @@ function CalendarInput({
 }
 
 export default function Home() {
+  const [expandedCardDatabases, setExpandedCardDatabases] = useState<string[]>([]);
   const [expandedDeals, setExpandedDeals] = useState<string[]>([]);
   const [view, setView] = useState<View>("Search");
   const [tripType, setTripType] = useState<TripType>("Round trip");
@@ -556,6 +557,14 @@ const pointsShort = transfer ? transfer.pointsShort : 0;
         : [...current, card]
     );
   };
+
+  const toggleCardDatabase = (cardName: string) => {
+  setExpandedCardDatabases((current) =>
+    current.includes(cardName)
+      ? current.filter((name) => name !== cardName)
+      : [...current, cardName]
+  );
+};
 
   const updatePointBalance = (card: string, value: string) => {
     const cleanedValue = value.replace(/[^\d,]/g, "");
@@ -1255,6 +1264,52 @@ const transferOptions = getRankedTransferOptions(deal);
                     placeholder={`Optional ${ecosystem.name} balance`}
                     className="border border-slate-300 p-3 rounded-xl w-full mt-3"
                   />
+                  <button
+  type="button"
+  onClick={() => toggleCardDatabase(ecosystem.name)}
+  className="mt-3 w-full border border-slate-300 rounded-xl p-3 font-semibold hover:bg-slate-50"
+>
+  {expandedCardDatabases.includes(ecosystem.name)
+    ? "Hide transfer database"
+    : "View transfer database"}
+</button>
+
+{expandedCardDatabases.includes(ecosystem.name) && (
+  <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+    <p className="font-semibold text-slate-900 mb-2">
+      {ecosystem.name} transfer partners
+    </p>
+
+    <div className="space-y-2 max-h-72 overflow-y-auto">
+      {transferPartners
+        .filter((partner) => partner.card === ecosystem.name)
+        .sort((a, b) => a.program.localeCompare(b.program))
+        .map((partner) => (
+          <div
+            key={`${partner.card}-${partner.program}-${partner.airlineMatch}`}
+            className="bg-white border border-slate-200 rounded-lg p-3"
+          >
+            <p className="font-semibold text-slate-900">
+              {partner.program}
+            </p>
+
+            <p className="text-xs text-slate-500">
+              Airline match: {partner.airlineMatch}
+            </p>
+
+            <p className="text-sm text-slate-700 mt-1">
+              Ratio: 1,000 {partner.card} points ={" "}
+              {(1000 * partner.ratio).toLocaleString()} partner points
+            </p>
+
+            <p className="text-xs text-green-700 font-semibold mt-1">
+              {partner.dataStatus} transfer data
+            </p>
+          </div>
+        ))}
+    </div>
+  </div>
+)}
                 </div>
               ))}
             </div>
