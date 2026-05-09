@@ -677,8 +677,16 @@ const transferOptions = getRankedTransferOptions(deal);
                 {deal.tag}
               </span>
               {"dataSource" in deal && (
-  <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">
-    Placeholder data
+  <span
+    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+      deal.dataSource === "seats_aero_cached"
+        ? "bg-green-100 text-green-800"
+        : "bg-yellow-100 text-yellow-800"
+    }`}
+  >
+    {deal.dataSource === "seats_aero_cached"
+      ? "Seats.aero cached data"
+      : "Placeholder data"}
   </span>
 )}
 
@@ -712,17 +720,23 @@ const transferOptions = getRankedTransferOptions(deal);
     </p>
 
     <p className="text-sm font-semibold text-slate-900 mt-1">
-      {deal.departureTime || "Time TBD"} → {deal.arrivalTime || "Time TBD"}
+      {deal.dataSource === "seats_aero_cached"
+  ? "Exact schedule not included yet"
+  : `${deal.departureTime || "Time TBD"} → ${deal.arrivalTime || "Time TBD"}`}
       <span className="text-xs text-slate-500 ml-1">
         {deal.stops === "Nonstop" ? "" : "(+1)"}
       </span>
       {" • "}
       {deal.duration || "Duration TBD"} •{" "}
-      {deal.stops === "Nonstop"
-        ? "Nonstop"
-        : deal.stopCity
-        ? `1 stop via ${deal.stopCity}`
-        : "1 stop"}
+      {"dataSource" in deal && deal.dataSource === "seats_aero_cached"
+  ? deal.stops === "Nonstop"
+    ? "Nonstop"
+    : "Connecting award option"
+  : deal.stops === "Nonstop"
+  ? "Nonstop"
+  : deal.stopCity
+  ? `1 stop via ${deal.stopCity}`
+  : "1 stop"}
     </p>
   </div>
 
@@ -762,9 +776,28 @@ const transferOptions = getRankedTransferOptions(deal);
 
 {isExpanded && (
   <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+    {"dataSource" in deal && deal.dataSource === "seats_aero_cached" ? (
+  <div>
+    <p className="font-semibold text-slate-900 mb-2">
+      Schedule details
+    </p>
+    <p className="text-sm text-slate-600">
+      This result uses real cached Seats.aero award availability. Exact flight
+      times, flight numbers, layover airports, and aircraft details are not
+      included yet. Full itinerary details will be added in a later API phase.
+    </p>
+    <p className="text-sm text-slate-800 mt-3 font-semibold">
+      Route: {deal.from} → {deal.to}
+    </p>
+    <p className="text-sm text-slate-600">
+      Availability type: {deal.stops === "Nonstop" ? "Nonstop" : "Connecting award option"}
+    </p>
+  </div>
+) : (
+  <>
     <p className="font-semibold text-slate-900 mb-3">
-  Outbound flight details
-</p>
+      Outbound flight details
+    </p>
 
     <div className="space-y-4">
       {deal.segments.map((segment, segmentIndex) => (
@@ -793,7 +826,7 @@ const transferOptions = getRankedTransferOptions(deal);
               <div className="mt-3 text-xs text-slate-500 border-l-2 border-slate-300 pl-3">
                 Layover in {deal.stopCity} • approx. 2h
               </div>
-            )}
+            )}<p className="font-semibold text-slate-900 mb-3"></p>
         </div>
       ))}
 
@@ -832,6 +865,8 @@ const transferOptions = getRankedTransferOptions(deal);
   </div>
 )}
     </div>
+  </>
+)}
   </div>
 )}
 

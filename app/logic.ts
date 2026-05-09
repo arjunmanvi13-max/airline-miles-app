@@ -13,6 +13,7 @@ arrivalTime: string;
 duration: string;
 aircraft: string;
 stopCity?: string;
+
 segments: {
   from: string;
   to: string;
@@ -21,8 +22,10 @@ segments: {
   duration: string;
   aircraft: string;
   airline: string;
+  
 }[];
   airline: string;
+  transferAirlineMatch?: string;
   miles: number;
   taxes: number;
   program: string;
@@ -42,12 +45,19 @@ export const getTransferOptions = (
   selectedCards: string[],
   applyTransferBonuses: boolean
 ) => {
+  const matchTarget = deal.transferAirlineMatch || deal.program || deal.airline;
+
   const options = transferPartners
-    .filter(
-      (item) =>
-        selectedCards.includes(item.card) &&
-        deal.airline.toLowerCase().includes(item.airlineMatch.toLowerCase())
-    )
+    .filter((partner) => {
+      const cardMatches =
+        selectedCards.length === 0 || selectedCards.includes(partner.card);
+
+      const airlineMatches = matchTarget
+        .toLowerCase()
+        .includes(partner.airlineMatch.toLowerCase());
+
+      return cardMatches && airlineMatches;
+    })
     .map((transfer) => {
       const bonus = prototypeTransferBonuses.find(
         (item) => item.card === transfer.card && item.program === transfer.program
