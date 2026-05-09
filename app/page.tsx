@@ -354,6 +354,7 @@ function CalendarInput({
 }
 
 export default function Home() {
+  
   const [expandedCardDatabases, setExpandedCardDatabases] = useState<string[]>([]);
   const [expandedDeals, setExpandedDeals] = useState<string[]>([]);
   const [view, setView] = useState<View>("Search");
@@ -367,6 +368,7 @@ export default function Home() {
   const [to, setTo] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+
 
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -387,6 +389,13 @@ export default function Home() {
   const paidTravelers = adults + children + infantsInSeat;
   const tripMultiplier = tripType === "Round trip" ? 2 : 1;
   const totalMultiplier = paidTravelers * tripMultiplier;
+
+  const hasRealResults = results.some(
+  (deal) => "dataSource" in deal && deal.dataSource === "seats_aero_cached"
+);
+
+const hasOnlyPlaceholderResults =
+  results.length > 0 && results.every((deal) => deal.dataSource === "placeholder");
 
   const toggleExpandedDeal = (dealId: string) => {
   setExpandedDeals((current) =>
@@ -1051,7 +1060,7 @@ const transferOptions = getRankedTransferOptions(deal);
           </p>
 
           <h1 className="text-4xl font-bold text-slate-900">
-            Airline Miles Finder
+            MileMind(Airline Miles Finder)
           </h1>
 
           <p className="text-slate-600 mt-2">
@@ -1081,11 +1090,19 @@ const transferOptions = getRankedTransferOptions(deal);
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-white shadow-xl rounded-3xl p-6 border border-slate-200">
               <h2 className="text-2xl font-bold text-slate-900 mb-1">
-                Search trip
-              </h2>
-              <p className="text-sm text-slate-500 mb-5">
-                Enter the basics. Wallet settings are summarized before search.
-              </p>
+  Search trip
+</h2>
+
+<div className="mb-5 bg-blue-50 border border-blue-200 rounded-xl p-4">
+  <p className="text-sm font-semibold text-blue-900">
+    Searches use cached award availability (Medium to High Volume Routes Only)
+  </p>
+  <p className="text-xs text-blue-800 mt-1">
+    MileMind shows real award results when recently indexed Seats.aero cached
+    data is available. If no cached award data exists for a route or date,
+    simulated options may appear so you can still test point and transfer logic.
+  </p>
+</div>
 
               <select
                 value={tripType}
@@ -1418,6 +1435,21 @@ const transferOptions = getRankedTransferOptions(deal);
               </div>
             </div>
 
+            {!isSearching && hasRealResults && (
+  <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-4 text-sm text-green-900">
+    Showing real cached award availability from Seats.aero. Schedule details may
+    still be estimated until full itinerary data is added.
+  </div>
+)}
+
+{!isSearching && hasOnlyPlaceholderResults && (
+  <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 mb-4 text-sm text-yellow-900">
+    No real cached award options were found for this exact route and date.
+    Simulated results are shown so you can still compare transfer partners,
+    point costs, and wallet logic.
+  </div>
+)}
+
             {isSearching && (
               <div className="bg-white border border-slate-200 rounded-2xl p-5 text-slate-500">
                 Searching realistic placeholder results...
@@ -1488,22 +1520,24 @@ const transferOptions = getRankedTransferOptions(deal);
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                 <p className="font-semibold text-yellow-900">
-                  Placeholder data
-                </p>
-                <p className="text-sm text-yellow-800 mt-1">
-                  Award availability, cash prices, flight times, and seat
-                  inventory are simulated until API integration.
-                </p>
+  Cached-data limitation
+</p>
+<p className="text-sm text-yellow-800 mt-1">
+  MileMind currently uses Seats.aero cached award availability. Some routes or
+  dates may not return real results if they have not recently been indexed.
+  In those cases, simulated results are shown for comparison only.
+</p>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <p className="font-semibold text-blue-900">
-                  API-ready structure
-                </p>
-                <p className="text-sm text-blue-800 mt-1">
-                  The UI is ready to swap placeholder results for real award
-                  and cash-price adapters.
-                </p>
+  Live-search limitation
+</p>
+<p className="text-sm text-blue-800 mt-1">
+  Live award search is not available through the current Pro API tier. Real
+  results come from cached award data, while full live search would require a
+  commercial Seats.aero agreement.
+</p>
               </div>
 
               <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
