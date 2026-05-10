@@ -12,6 +12,7 @@ import {
 } from "./logic";
 
 import { FlightDealWithSource, searchFlightDeals } from "./adapters";
+import AirportAutocomplete from "@/components/AirportAutocomplete";
 
 type View = "Search" | "Wallet" | "Results" | "Saved" | "Data";
 type TripType = "Round trip" | "One way" | "Multi-city";
@@ -82,92 +83,7 @@ const defaultBalances: PointBalances = {
   "Wells Fargo": "",
 };
 
-function AirportAutocomplete({
-  label,
-  selectedAirport,
-  onSelect,
-}: {
-  label: string;
-  selectedAirport: string;
-  onSelect: (code: string) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
 
-  const selected = airports.find((airport) => airport.code === selectedAirport);
-
-const filteredAirports = airports
-  .filter((airport) => {
-    const search = query.trim().toLowerCase();
-
-    const searchableText = [
-      airport.code,
-      airport.name,
-      airport.region,
-      "municipality" in airport ? airport.municipality : "",
-      "country" in airport ? airport.country : "",
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return searchableText.includes(search);
-  })
-  .slice(0, 8);
-
-  const displayValue = isOpen
-    ? query
-    : selected
-    ? `${selected.code} — ${selected.name}`
-    : "";
-
-  return (
-    <div className="relative">
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
-        {label}
-      </label>
-
-      <input
-        value={displayValue}
-        onFocus={() => {
-          setIsOpen(true);
-          setQuery("");
-        }}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setIsOpen(true);
-        }}
-        placeholder={`Search ${label.toLowerCase()} airport`}
-        className="border border-slate-300 p-3 rounded-xl w-full"
-      />
-
-      {isOpen && (
-        <div className="absolute z-30 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
-          {filteredAirports.map((airport) => (
-            <button
-              key={airport.code}
-              type="button"
-              onMouseDown={() => {
-                onSelect(airport.code);
-                setQuery("");
-                setIsOpen(false);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-slate-100 border-b border-slate-100 last:border-b-0"
-            >
-              <p className="font-semibold text-slate-900">
-                {airport.code} — {airport.name}
-              </p>
-              <p className="text-xs text-slate-500">
-  {airport.municipality
-    ? `${airport.municipality}, ${airport.country}`
-    : airport.region}
-</p>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function TravelerCounter({
   label,
@@ -212,146 +128,7 @@ function TravelerCounter({
   );
 }
 
-function CalendarInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [visibleMonth, setVisibleMonth] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  });
-
-  const monthName = visibleMonth.toLocaleString("default", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const startOfMonth = new Date(
-    visibleMonth.getFullYear(),
-    visibleMonth.getMonth(),
-    1
-  );
-
-  const endOfMonth = new Date(
-    visibleMonth.getFullYear(),
-    visibleMonth.getMonth() + 1,
-    0
-  );
-
-  const startDay = startOfMonth.getDay();
-  const daysInMonth = endOfMonth.getDate();
-
-  const days = [
-    ...Array(startDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
-  ];
-
-  const formatDate = (day: number) => {
-    const month = String(visibleMonth.getMonth() + 1).padStart(2, "0");
-    const date = String(day).padStart(2, "0");
-    return `${visibleMonth.getFullYear()}-${month}-${date}`;
-  };
-
-  const displayValue = value
-    ? new Date(value + "T00:00:00").toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "";
-
-  return (
-    <div className="relative">
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
-        {label}
-      </label>
-
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="border border-slate-300 p-3 rounded-xl w-full text-left bg-white"
-      >
-        {displayValue || `Select ${label.toLowerCase()}`}
-      </button>
-
-      {isOpen && (
-        <div className="absolute z-40 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 w-full md:w-80">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              type="button"
-              onClick={() =>
-                setVisibleMonth(
-                  new Date(
-                    visibleMonth.getFullYear(),
-                    visibleMonth.getMonth() - 1,
-                    1
-                  )
-                )
-              }
-              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold"
-            >
-              ‹
-            </button>
-
-            <p className="font-bold text-slate-900">{monthName}</p>
-
-            <button
-              type="button"
-              onClick={() =>
-                setVisibleMonth(
-                  new Date(
-                    visibleMonth.getFullYear(),
-                    visibleMonth.getMonth() + 1,
-                    1
-                  )
-                )
-              }
-              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold"
-            >
-              ›
-            </button>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 mb-2">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day}>{day}</div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day, index) =>
-              day === null ? (
-                <div key={`empty-${index}`} />
-              ) : (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => {
-                    onChange(formatDate(day));
-                    setIsOpen(false);
-                  }}
-                  className={`rounded-lg p-2 text-sm hover:bg-slate-100 ${
-                    value === formatDate(day)
-                      ? "bg-slate-900 text-white hover:bg-slate-900"
-                      : "text-slate-800"
-                  }`}
-                >
-                  {day}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import CalendarInput from "@/components/CalendarInput";
 
 export default function Home() {
   
@@ -478,6 +255,7 @@ const getAwardDurationText = (deal: FlightDealWithSource) => {
 
 const hasOnlyPlaceholderResults =
   results.length > 0 && results.every((deal) => deal.dataSource === "placeholder");
+  
 
   const toggleExpandedDeal = (dealId: string) => {
   setExpandedDeals((current) =>
@@ -1574,6 +1352,8 @@ are not included yet, so confirm schedules and stops before transferring points.
               </div>
             )}
 
+            
+
             {!isSearching &&
               displayedResults.map((deal, index) => renderResultCard(deal, index))}
           </div>
@@ -1668,3 +1448,5 @@ are not included yet, so confirm schedules and stops before transferring points.
     </main>
   );
 }
+
+
