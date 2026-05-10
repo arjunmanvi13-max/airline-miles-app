@@ -11,8 +11,13 @@ import {
   getTransferOptions,
 } from "./logic";
 
+
 import { FlightDealWithSource, searchFlightDeals } from "./adapters";
 import AirportAutocomplete from "@/components/AirportAutocomplete";
+import CalendarInput from "@/components/CalendarInput";
+import TravelerCounter from "@/components/TravelerCounter";
+import { getBrandStyle, getLogoInitials } from "@/components/BrandBadge";
+
 
 type View = "Search" | "Wallet" | "Results" | "Saved" | "Data";
 type TripType = "Round trip" | "One way" | "Multi-city";
@@ -85,50 +90,9 @@ const defaultBalances: PointBalances = {
 
 
 
-function TravelerCounter({
-  label,
-  sublabel,
-  value,
-  onChange,
-  min = 0,
-}: {
-  label: string;
-  sublabel?: string;
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-}) {
-  return (
-    <div className="flex items-center justify-between border border-slate-200 rounded-xl p-3">
-      <div>
-        <p className="font-semibold text-slate-800">{label}</p>
-        {sublabel && <p className="text-xs text-slate-500">{sublabel}</p>}
-      </div>
 
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(min, value - 1))}
-          className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold"
-        >
-          −
-        </button>
 
-        <span className="w-6 text-center font-semibold">{value}</span>
 
-        <button
-          type="button"
-          onClick={() => onChange(value + 1)}
-          className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-bold"
-        >
-          +
-        </button>
-      </div>
-    </div>
-  );
-}
-
-import CalendarInput from "@/components/CalendarInput";
 
 export default function Home() {
   
@@ -149,59 +113,7 @@ export default function Home() {
   const isRealAwardResult = (deal: FlightDealWithSource) =>
   deal.dataSource === "seats_aero_cached";
 
-const getLogoInitials = (name: string) => {
-  return name
-    .replace("®", "")
-    .replace("/", " ")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-};
 
-const getBrandStyle = (name: string) => {
-  const lower = name.toLowerCase();
-
-  if (lower.includes("emirates") || lower.includes("skywards")) {
-    return "bg-red-100 text-red-800 border-red-200";
-  }
-
-  if (lower.includes("air canada") || lower.includes("aeroplan")) {
-    return "bg-rose-100 text-rose-800 border-rose-200";
-  }
-
-  if (lower.includes("delta")) {
-    return "bg-blue-100 text-blue-800 border-blue-200";
-  }
-
-  if (lower.includes("united")) {
-    return "bg-sky-100 text-sky-800 border-sky-200";
-  }
-
-  if (lower.includes("american")) {
-    return "bg-indigo-100 text-indigo-800 border-indigo-200";
-  }
-
-  if (lower.includes("alaska")) {
-    return "bg-cyan-100 text-cyan-800 border-cyan-200";
-  }
-
-  if (lower.includes("qantas")) {
-    return "bg-red-100 text-red-800 border-red-200";
-  }
-
-  if (lower.includes("flying blue") || lower.includes("air france")) {
-    return "bg-blue-100 text-blue-800 border-blue-200";
-  }
-
-  if (lower.includes("virgin")) {
-    return "bg-pink-100 text-pink-800 border-pink-200";
-  }
-
-  return "bg-slate-100 text-slate-800 border-slate-200";
-};
 
 const getAwardScheduleText = (deal: FlightDealWithSource) => {
   if (isRealAwardResult(deal)) return "Schedule details pending";
