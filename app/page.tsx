@@ -369,6 +369,88 @@ export default function Home() {
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
 
+  const isRealAwardResult = (deal: FlightDealWithSource) =>
+  deal.dataSource === "seats_aero_cached";
+
+const getLogoInitials = (name: string) => {
+  return name
+    .replace("®", "")
+    .replace("/", " ")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+};
+
+const getBrandStyle = (name: string) => {
+  const lower = name.toLowerCase();
+
+  if (lower.includes("emirates") || lower.includes("skywards")) {
+    return "bg-red-100 text-red-800 border-red-200";
+  }
+
+  if (lower.includes("air canada") || lower.includes("aeroplan")) {
+    return "bg-rose-100 text-rose-800 border-rose-200";
+  }
+
+  if (lower.includes("delta")) {
+    return "bg-blue-100 text-blue-800 border-blue-200";
+  }
+
+  if (lower.includes("united")) {
+    return "bg-sky-100 text-sky-800 border-sky-200";
+  }
+
+  if (lower.includes("american")) {
+    return "bg-indigo-100 text-indigo-800 border-indigo-200";
+  }
+
+  if (lower.includes("alaska")) {
+    return "bg-cyan-100 text-cyan-800 border-cyan-200";
+  }
+
+  if (lower.includes("qantas")) {
+    return "bg-red-100 text-red-800 border-red-200";
+  }
+
+  if (lower.includes("flying blue") || lower.includes("air france")) {
+    return "bg-blue-100 text-blue-800 border-blue-200";
+  }
+
+  if (lower.includes("virgin")) {
+    return "bg-pink-100 text-pink-800 border-pink-200";
+  }
+
+  return "bg-slate-100 text-slate-800 border-slate-200";
+};
+
+const getAwardScheduleText = (deal: FlightDealWithSource) => {
+  if (isRealAwardResult(deal)) return "Schedule details pending";
+
+  return `${deal.departureTime || "Time TBD"} → ${
+    deal.arrivalTime || "Time TBD"
+  }`;
+};
+
+const getAwardRouteTypeText = (deal: FlightDealWithSource) => {
+  if (isRealAwardResult(deal)) {
+    return deal.stops === "Direct award result"
+      ? "Direct award result"
+      : "May include connections";
+  }
+
+  if (deal.stops === "Nonstop") return "Nonstop";
+  if (deal.stopCity) return `1 stop via ${deal.stopCity}`;
+  return "1 stop";
+};
+
+const getAwardDurationText = (deal: FlightDealWithSource) => {
+  if (isRealAwardResult(deal)) return "Schedule TBD";
+  return deal.duration || "Duration TBD";
+};
+
 
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -680,7 +762,29 @@ const transferOptions = getRankedTransferOptions(deal);
         <div className="flex flex-col md:flex-row md:justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <p className="font-bold text-xl text-slate-900">{deal.airline}</p>
+              <div className="flex items-center gap-3">
+  <div
+    className={`w-11 h-11 rounded-full border flex items-center justify-center text-sm font-bold ${getBrandStyle(
+      deal.airline
+    )}`}
+  >
+    {getLogoInitials(deal.airline)}
+  </div>
+
+  <div>
+    <p className="font-bold text-xl text-slate-900">{deal.airline}</p>
+    <div className="flex items-center gap-2 mt-1">
+      <span
+        className={`w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-bold ${getBrandStyle(
+          deal.program
+        )}`}
+      >
+        {getLogoInitials(deal.program)}
+      </span>
+      <p className="text-xs text-slate-500">{deal.program}</p>
+    </div>
+  </div>
+</div>
 
               <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">
                 {deal.tag}
@@ -729,24 +833,12 @@ const transferOptions = getRankedTransferOptions(deal);
     </p>
 
     <p className="text-sm font-semibold text-slate-900 mt-1">
-      {deal.dataSource === "seats_aero_cached"
-  ? "Exact schedule not included yet"
-  : `${deal.departureTime || "Time TBD"} → ${deal.arrivalTime || "Time TBD"}`}
-      <span className="text-xs text-slate-500 ml-1">
-        {deal.stops === "Nonstop" ? "" : "(+1)"}
-      </span>
-      {" • "}
-      {deal.duration || "Duration TBD"} •{" "}
-      {"dataSource" in deal && deal.dataSource === "seats_aero_cached"
-  ? deal.stops === "Nonstop"
-    ? "Nonstop"
-    : "Connecting award option"
-  : deal.stops === "Nonstop"
-  ? "Nonstop"
-  : deal.stopCity
-  ? `1 stop via ${deal.stopCity}`
-  : "1 stop"}
-    </p>
+  {getAwardScheduleText(deal)}
+  {" • "}
+  {getAwardDurationText(deal)}
+  {" • "}
+  {getAwardRouteTypeText(deal)}
+</p>
   </div>
 
   {returnPreview && (
@@ -791,15 +883,16 @@ const transferOptions = getRankedTransferOptions(deal);
       Schedule details
     </p>
     <p className="text-sm text-slate-600">
-      This result uses real cached Seats.aero award availability. Exact flight
-      times, flight numbers, layover airports, and aircraft details are not
-      included yet. Full itinerary details will be added in a later API phase.
-    </p>
+  This result uses real cached award availability. Exact flight times,
+  flight numbers, layover airports, and aircraft details are not included
+  in the current API response yet. Always confirm the final itinerary on
+  the booking program before transferring points.
+</p>
     <p className="text-sm text-slate-800 mt-3 font-semibold">
       Route: {deal.from} → {deal.to}
     </p>
     <p className="text-sm text-slate-600">
-      Availability type: {deal.stops === "Nonstop" ? "Nonstop" : "Connecting award option"}
+      Availability type: {getAwardRouteTypeText(deal)}
     </p>
   </div>
 ) : (
@@ -935,7 +1028,16 @@ const transferOptions = getRankedTransferOptions(deal);
 
             <p className="text-sm text-purple-900">
               Transfer {transfer.card} points →{" "}
-              <span className="font-semibold">{transfer.program}</span>
+<span className="inline-flex items-center gap-2 font-semibold">
+  <span
+    className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] ${getBrandStyle(
+      transfer.program
+    )}`}
+  >
+    {getLogoInitials(transfer.program)}
+  </span>
+  {transfer.program}
+</span>
             </p>
 
             <p className="text-sm text-purple-900 mt-1">
@@ -1039,6 +1141,16 @@ const transferOptions = getRankedTransferOptions(deal);
   <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-900">
     {deal.dataNote}
   </div>
+)}
+{deal.bookingLink && (
+  <a
+    href={deal.bookingLink}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mt-4 block w-full bg-slate-900 text-white text-center rounded-xl p-3 font-semibold hover:bg-slate-700"
+  >
+    Check availability with {deal.program}
+  </a>
 )}
 
         <button
@@ -1437,8 +1549,8 @@ const transferOptions = getRankedTransferOptions(deal);
 
             {!isSearching && hasRealResults && (
   <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-4 text-sm text-green-900">
-    Showing real cached award availability from Seats.aero. Schedule details may
-    still be estimated until full itinerary data is added.
+    Showing real cached award availability from Seats.aero. Exact itinerary details
+are not included yet, so confirm schedules and stops before transferring points.
   </div>
 )}
 

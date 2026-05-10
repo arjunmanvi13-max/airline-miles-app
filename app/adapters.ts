@@ -17,11 +17,13 @@ export type FlightDealWithSource = FlightDeal & {
   dataNote: string;
   seatsRemaining?: number;
   seatsAeroSource?: string;
+  bookingLink?: string;
 };
 
 const airlineNames: Record<string, string> = {
   AA: "American Airlines",
   AC: "Air Canada",
+  AI: "Air India",
   AF: "Air France",
   AS: "Alaska Airlines",
   BA: "British Airways",
@@ -49,6 +51,22 @@ const airlineNames: Record<string, string> = {
   TP: "TAP Air Portugal",
   UA: "United Airlines",
   VS: "Virgin Atlantic",
+  
+};
+
+const bookingLinks: Record<string, string> = {
+  delta: "https://www.delta.com",
+  united: "https://www.united.com",
+  aeroplan: "https://www.aircanada.com/aeroplan",
+  lifemiles: "https://www.lifemiles.com",
+  virginatlantic: "https://www.virginatlantic.com",
+  flyingblue: "https://www.flyingblue.com",
+  emirates: "https://www.emirates.com",
+  qantas: "https://www.qantas.com",
+  alaska: "https://www.alaskaair.com",
+  britishairways: "https://www.britishairways.com",
+  qatar: "https://www.qatarairways.com",
+  singapore: "https://www.singaporeair.com",
 };
 
 const sourceProgramNames: Record<string, string> = {
@@ -235,13 +253,14 @@ const airlineName = getAirlineName(airlineCodes, programName);
         miles,
         taxes,
         program: programName,
+        bookingLink: bookingLinks[item.Source],
         estimatedCashPrice: Math.round(miles * 0.018),
         from: item.Route?.OriginAirport || input.from,
         to: item.Route?.DestinationAirport || input.to,
         date: item.Date,
-        stops: direct ? "Nonstop" : "Connecting award option",
+        stops: direct ? "Direct award result" : "May include connections",
         cabin: input.cabin,
-        departureTime: "Schedule unavailable",
+        departureTime: "Schedule details pending",
         arrivalTime: "",
         duration: "",
         aircraft: "",
