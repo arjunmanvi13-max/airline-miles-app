@@ -347,31 +347,37 @@ export const cardEcosystems = [
   {
     name: "Amex",
     pointsName: "Membership Rewards®",
+    logoPath: "/logos/cards/amex.svg",
     cards: ["Platinum Card®", "Gold Card®", "Green Card®", "Business Platinum Card®", "Business Gold Card®"],
   },
   {
     name: "Chase",
     pointsName: "Ultimate Rewards®",
+    logoPath: "/logos/cards/chase.svg",
     cards: ["Sapphire Preferred®", "Sapphire Reserve®", "Ink Business Preferred®", "Freedom Flex®", "Freedom Unlimited®"],
   },
   {
     name: "Capital One",
     pointsName: "Capital One Miles",
+    logoPath: "/logos/cards/capital-one.svg",
     cards: ["Venture X", "Venture Rewards", "VentureOne", "Spark Miles"],
   },
   {
     name: "Bilt",
     pointsName: "Bilt Rewards®",
+    logoPath: "/logos/cards/bilt.svg",
     cards: ["Bilt Mastercard®"],
   },
   {
     name: "Citi",
     pointsName: "ThankYou® Points",
+    logoPath: "/logos/cards/citi.svg",
     cards: ["Strata Premier℠", "Strata Elite℠", "Premier® Card"],
   },
   {
     name: "Wells Fargo",
     pointsName: "Wells Fargo Rewards®",
+    logoPath: "/logos/cards/wells-fargo.svg",
     cards: ["Autograph®", "Autograph Journey℠", "Active Cash® with Autograph transfer access"],
   },
 ];

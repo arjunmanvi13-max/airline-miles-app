@@ -15,6 +15,7 @@ export type SearchFlightDealsInput = {
 export type FlightDealWithSource = FlightDeal & {
   dataSource: "seats_aero_cached" | "placeholder";
   dataNote: string;
+  routeConfidence: "cached_availability_only" | "simulated";
   seatsRemaining?: number;
   seatsAeroSource?: string;
   bookingLink?: string;
@@ -51,7 +52,9 @@ const airlineNames: Record<string, string> = {
   TP: "TAP Air Portugal",
   UA: "United Airlines",
   VS: "Virgin Atlantic",
+  QK: "Air Canada Express",
   "6E": "IndiGo",
+
   
 };
 
@@ -69,6 +72,7 @@ const bookingLinks: Record<string, string> = {
   qatar: "https://www.qatarairways.com",
   singapore: "https://www.singaporeair.com",
   etihad: "https://www.etihad.com",
+  indigo: "https://www.goindigo.in",
 };
 
 const sourceProgramNames: Record<string, string> = {
@@ -207,11 +211,12 @@ export const searchFlightDeals = async (
 
     if (uniqueResults.length === 0) {
       return fallbackDeals.map((deal) => ({
-        ...deal,
-        dataSource: "placeholder",
-        dataNote:
-          "No usable cached Seats.aero award results were found for this exact search, so this result uses placeholder data.",
-      }));
+  ...deal,
+  dataSource: "placeholder",
+  routeConfidence: "simulated",
+  dataNote:
+    "No usable cached Seats.aero award results were found for this exact search, so this result uses simulated fallback data.",
+}));
     }
 
     return uniqueResults.map((item: any, index: number) => {
@@ -262,9 +267,9 @@ const airlineName = getAirlineName(airlineCodes, programName);
         from: item.Route?.OriginAirport || input.from,
         to: item.Route?.DestinationAirport || input.to,
         date: item.Date,
-        stops: direct ? "Direct award result" : "May include connections",
-        cabin: input.cabin,
-        departureTime: "Schedule details pending",
+        stops: "Stops unknown",
+cabin: input.cabin,
+departureTime: "",
         arrivalTime: "",
         duration: "",
         aircraft: "",
@@ -275,18 +280,21 @@ const airlineName = getAirlineName(airlineCodes, programName);
         seatsRemaining,
         seatsAeroSource: item.Source,
         dataSource: "seats_aero_cached",
-        dataNote:
-          `Real cached Seats.aero award availability through ${programName}. Exact flight times, layovers, and flight numbers are not included yet.`,
+routeConfidence: "cached_availability_only",
+dataNote:
+  `Real cached Seats.aero award availability through ${programName}. Cabin availability, points, taxes, and seats are cached. Exact schedule, flight number, aircraft, and nonstop/connection status are not confirmed here.`,
       };
     });
   } catch (error) {
     console.error(error);
 
     return fallbackDeals.map((deal) => ({
-      ...deal,
-      dataSource: "placeholder",
-      dataNote:
-        "Seats.aero data could not be loaded, so this result uses placeholder data.",
+  ...deal,
+  dataSource: "placeholder",
+  routeConfidence: "simulated",
+  dataNote:
+    "Seats.aero data could not be loaded, so this result uses simulated fallback data.",
+
     }));
   }
 };

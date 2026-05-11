@@ -85,7 +85,7 @@ export default function SearchScreen({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 bg-white shadow-xl rounded-3xl p-6 border border-slate-200">
-        <h2 className="text-2xl font-bold text-slate-900 mb-1">
+        <h2 className="text-2xl font-bold text-slate-900 leading-tight">
           Search trip
         </h2>
 
@@ -158,7 +158,8 @@ export default function SearchScreen({
             Travelers
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4
+          ">
             <TravelerCounter
               label="Adults"
               value={adults}
@@ -213,16 +214,18 @@ export default function SearchScreen({
           Apply prototype transfer bonuses when available
         </label>
 
-        <button
-          onClick={handleSearch}
-          disabled={isSearching}
-          className="mt-6 w-full bg-slate-900 hover:bg-slate-700 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
-        >
-          {isSearching ? "Searching..." : "Search Best Miles Deals"}
-        </button>
+        <div className="sticky bottom-0 bg-white pt-4 pb-2 mt-6 border-t border-slate-200 md:static md:border-0 md:p-0">
+  <button
+    onClick={handleSearch}
+    disabled={isSearching}
+    className="w-full bg-slate-900 hover:bg-slate-700 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
+  >
+    {isSearching ? "Searching..." : "Search Best Miles Deals"}
+  </button>
+</div>
       </div>
 
-      <div className="bg-white shadow-xl rounded-3xl p-6 border border-slate-200 h-fit">
+      <div className="bg-white shadow-xl rounded-3xl p-4 md:p-6 border border-slate-200">
         <h2 className="text-xl font-bold text-slate-900">My wallet</h2>
         <p className="text-sm text-slate-500 mt-1">
           Results will prioritize flights you can afford with your points.

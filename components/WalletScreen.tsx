@@ -1,4 +1,5 @@
 import { cardEcosystems, transferPartners } from "@/app/data";
+import Image from "next/image";
 
 type PointBalances = Record<string, string>;
 
@@ -42,9 +43,19 @@ export default function WalletScreen({
                 onChange={() => onToggleCard(ecosystem.name)}
               />
 
-              <span className="font-semibold text-slate-900">
-                {ecosystem.name}
-              </span>
+              <div className="flex items-center gap-2">
+  {"logoPath" in ecosystem && ecosystem.logoPath && (
+    <img
+  src={ecosystem.logoPath}
+  alt=""
+  className="h-7 w-7 object-contain shrink-0"
+/>
+  )}
+
+  <span className="font-semibold text-slate-900">
+    {ecosystem.name}
+  </span>
+</div>
 
               <span className="text-xs text-green-700 font-semibold">
                 transfer data
