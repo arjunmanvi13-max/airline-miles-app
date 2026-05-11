@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { airports, cardEcosystems, transferPartners } from "./data";
+import { cardEcosystems } from "./data";
 import {
   FlightDeal,
   getCentsPerMile,
@@ -22,6 +22,9 @@ import {
   getAwardRouteTypeText,
   getAwardScheduleText,
 } from "@/components/AwardText";
+import DataNotes from "@/components/DataNotes";
+import SavedTrips from "@/components/SavedTrips";
+import WalletScreen from "@/components/WalletScreen";
 
 
 type View = "Search" | "Wallet" | "Results" | "Saved" | "Data";
@@ -1046,119 +1049,19 @@ const transferOptions = getRankedTransferOptions(deal);
         )}
 
         {view === "Wallet" && (
-          <div className="bg-white shadow-xl rounded-3xl p-6 border border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-900">My Wallet</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Select your point ecosystems and enter optional balances.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-5">
-              {cardEcosystems.map((ecosystem) => (
-                <div
-                  key={ecosystem.name}
-                  className="border border-slate-300 rounded-xl p-4 text-sm"
-                >
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedCards.includes(ecosystem.name)}
-                      onChange={() => toggleCard(ecosystem.name)}
-                    />
-
-                    <span className="font-semibold text-slate-900">
-                      {ecosystem.name}
-                    </span>
-
-                    <span className="text-xs text-green-700 font-semibold">
-                      transfer data
-                    </span>
-                  </label>
-
-                  <p className="text-xs text-slate-500 mt-1">
-                    {ecosystem.pointsName}
-                  </p>
-
-                  <p className="text-xs text-slate-600 mt-2">
-                    Cards: {ecosystem.cards.join(", ")}
-                  </p>
-
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={pointBalances[ecosystem.name] || ""}
-                    onChange={(e) =>
-                      updatePointBalance(ecosystem.name, e.target.value)
-                    }
-                    placeholder={`Optional ${ecosystem.name} balance`}
-                    className="border border-slate-300 p-3 rounded-xl w-full mt-3"
-                  />
-                  <button
-  type="button"
-  onClick={() => toggleCardDatabase(ecosystem.name)}
-  className="mt-3 w-full border border-slate-300 rounded-xl p-3 font-semibold hover:bg-slate-50"
->
-  {expandedCardDatabases.includes(ecosystem.name)
-    ? "Hide transfer database"
-    : "View transfer database"}
-</button>
-
-{expandedCardDatabases.includes(ecosystem.name) && (
-  <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
-    <p className="font-semibold text-slate-900 mb-2">
-      {ecosystem.name} transfer partners
-    </p>
-
-    <div className="space-y-2 max-h-72 overflow-y-auto">
-      {transferPartners
-        .filter((partner) => partner.card === ecosystem.name)
-        .sort((a, b) => a.program.localeCompare(b.program))
-        .map((partner) => (
-          <div
-            key={`${partner.card}-${partner.program}-${partner.airlineMatch}`}
-            className="bg-white border border-slate-200 rounded-lg p-3"
-          >
-            <p className="font-semibold text-slate-900">
-              {partner.program}
-            </p>
-
-            <p className="text-xs text-slate-500">
-              Airline match: {partner.airlineMatch}
-            </p>
-
-            <p className="text-sm text-slate-700 mt-1">
-              Ratio: 1,000 {partner.card} points ={" "}
-              {(1000 * partner.ratio).toLocaleString()} partner points
-            </p>
-
-            <p className="text-xs text-green-700 font-semibold mt-1">
-              {partner.dataStatus} transfer data
-            </p>
-          </div>
-        ))}
-    </div>
-  </div>
+  <WalletScreen
+    selectedCards={selectedCards}
+    pointBalances={pointBalances}
+    expandedCardDatabases={expandedCardDatabases}
+    onToggleCard={toggleCard}
+    onToggleCardDatabase={toggleCardDatabase}
+    onUpdatePointBalance={updatePointBalance}
+    onSaveProfile={saveProfile}
+    onBackToSearch={() => setView("Search")}
+  />
 )}
-                </div>
-              ))}
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
-              <button
-                onClick={saveProfile}
-                className="w-full bg-slate-900 text-white font-semibold p-4 rounded-xl"
-              >
-                Save Wallet
-              </button>
 
-              <button
-                onClick={() => setView("Search")}
-                className="w-full bg-white border border-slate-300 font-semibold p-4 rounded-xl"
-              >
-                Back to Search
-              </button>
-            </div>
-          </div>
-        )}
 
         {view === "Results" && (
           <div>
@@ -1246,90 +1149,13 @@ are not included yet, so confirm schedules and stops before transferring points.
         )}
 
         {view === "Saved" && (
-          <div className="bg-white shadow-xl rounded-3xl p-6 border border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-900">Saved Trips</h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Saved placeholder options for comparison.
-            </p>
+  <SavedTrips
+    savedTrips={savedTrips}
+    onRemoveSavedTrip={removeSavedTrip}
+  />
+)}
 
-            {savedTrips.length === 0 ? (
-              <div className="mt-5 bg-slate-50 rounded-xl p-5 text-slate-500">
-                No saved trips yet.
-              </div>
-            ) : (
-              <div className="mt-5 space-y-3">
-                {savedTrips.map((deal, index) => (
-                  <div
-                    key={`${deal.airline}-${index}`}
-                    className="border rounded-xl p-4"
-                  >
-                    <p className="font-bold">{deal.airline}</p>
-                    <p className="text-sm text-slate-500">
-                      {deal.from} → {deal.to} • {deal.date} • {deal.cabin}
-                    </p>
-                    <button
-                      onClick={() => removeSavedTrip(index)}
-                      className="mt-3 text-sm font-semibold text-red-700"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {view === "Data" && (
-          <div className="bg-white shadow-xl rounded-3xl p-6 border border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Data Notes
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <p className="font-semibold text-green-900">
-                  Real data included
-                </p>
-                <p className="text-sm text-green-800 mt-1">
-                  Real airport database and structured transfer-ratio tables.
-                </p>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                <p className="font-semibold text-yellow-900">
-  Cached-data limitation
-</p>
-<p className="text-sm text-yellow-800 mt-1">
-  Vantara currently uses Seats.aero cached award availability. Some routes or
-  dates may not return real results if they have not recently been indexed.
-  In those cases, simulated results are shown for comparison only.
-</p>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="font-semibold text-blue-900">
-  Live-search limitation
-</p>
-<p className="text-sm text-blue-800 mt-1">
-  Live award search is not available through the current Pro API tier. Real
-  results come from cached award data, while full live search would require a
-  commercial Seats.aero agreement.
-</p>
-              </div>
-
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                <p className="font-semibold text-purple-900">
-                  Booking warning
-                </p>
-                <p className="text-sm text-purple-800 mt-1">
-                  Always verify award space before transferring points. Point
-                  transfers are often irreversible.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {view === "Data" && <DataNotes />}
       </div>
     </main>
   );

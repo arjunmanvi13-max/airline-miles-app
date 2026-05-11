@@ -51,6 +51,7 @@ const airlineNames: Record<string, string> = {
   TP: "TAP Air Portugal",
   UA: "United Airlines",
   VS: "Virgin Atlantic",
+  "6E": "IndiGo",
   
 };
 
