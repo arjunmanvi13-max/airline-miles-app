@@ -55,6 +55,7 @@ const airlineNames: Record<string, string> = {
   VS: "Virgin Atlantic",
   QK: "Air Canada Express",
   "6E": "IndiGo",
+  EI: "Aer Lingus",
 
   
 };

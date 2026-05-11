@@ -73,7 +73,7 @@ export default function ResultsScreen({
               checked={nonstopOnly}
               onChange={(e) => setNonstopOnly(e.target.checked)}
             />
-            Simulated Nonstop only
+            Nonstop only
           </label>
 
           <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-600">
