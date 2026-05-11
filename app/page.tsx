@@ -25,6 +25,7 @@ import {
 import DataNotes from "@/components/DataNotes";
 import SavedTrips from "@/components/SavedTrips";
 import WalletScreen from "@/components/WalletScreen";
+import SearchScreen from "@/components/SearchScreen";
 
 
 type View = "Search" | "Wallet" | "Results" | "Saved" | "Data";
@@ -388,16 +389,6 @@ const pointsShort = transfer ? transfer.pointsShort : 0;
   }, 700);
 };
 
-  const selectedCardText =
-    selectedCards.length > 0 ? selectedCards.join(", ") : "No cards selected";
-
-  const walletSummary = cardEcosystems
-    .filter((ecosystem) => selectedCards.includes(ecosystem.name))
-    .map((ecosystem) => ({
-      name: ecosystem.name,
-      balance: pointBalances[ecosystem.name],
-      pointsName: ecosystem.pointsName,
-    }));
 
   const renderResultCard = (deal: FlightDealWithSource, index: number) => {
     const dealId = `${deal.airline}-${deal.date}-${deal.from}-${deal.to}-${index}`;
@@ -866,187 +857,40 @@ const transferOptions = getRankedTransferOptions(deal);
         </div>
 
         {view === "Search" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white shadow-xl rounded-3xl p-6 border border-slate-200">
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">
-  Search trip
-</h2>
-
-<div className="mb-5 bg-blue-50 border border-blue-200 rounded-xl p-4">
-  <p className="text-sm font-semibold text-blue-900">
-    Searches use cached award availability (Medium to High Volume Routes Only)
-  </p>
-  <p className="text-xs text-blue-800 mt-1">
-    Vantara shows real award results when recently indexed Seats.aero cached
-    data is available. If no cached award data exists for a route or date,
-    simulated options may appear so you can still test point and transfer logic.
-  </p>
-</div>
-
-              <select
-                value={tripType}
-                onChange={(e) => setTripType(e.target.value as TripType)}
-                className="border border-slate-300 p-3 rounded-xl w-full bg-white"
-              >
-                <option value="Round trip">Round trip</option>
-                <option value="One way">One way</option>
-                <option value="Multi-city" disabled>
-                  Multi-city — coming in API phase
-                </option>
-              </select>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <AirportAutocomplete
-                  label="From"
-                  selectedAirport={from}
-                  onSelect={setFrom}
-                />
-                <AirportAutocomplete
-                  label="To"
-                  selectedAirport={to}
-                  onSelect={setTo}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-  <CalendarInput
-    label="Departure date"
-    value={departureDate}
-    onChange={setDepartureDate}
+  <SearchScreen
+    tripType={tripType}
+    setTripType={setTripType}
+    from={from}
+    setFrom={setFrom}
+    to={to}
+    setTo={setTo}
+    departureDate={departureDate}
+    setDepartureDate={setDepartureDate}
+    returnDate={returnDate}
+    setReturnDate={setReturnDate}
+    cabin={cabin}
+    setCabin={setCabin}
+    adults={adults}
+    setAdults={setAdults}
+    children={children}
+    setChildren={setChildren}
+    infantsInSeat={infantsInSeat}
+    setInfantsInSeat={setInfantsInSeat}
+    infantsOnLap={infantsOnLap}
+    setInfantsOnLap={setInfantsOnLap}
+    flexibleDates={flexibleDates}
+    setFlexibleDates={setFlexibleDates}
+    includeNearbyAirports={includeNearbyAirports}
+    setIncludeNearbyAirports={setIncludeNearbyAirports}
+    applyTransferBonuses={applyTransferBonuses}
+    setApplyTransferBonuses={setApplyTransferBonuses}
+    isSearching={isSearching}
+    handleSearch={handleSearch}
+    selectedCards={selectedCards}
+    pointBalances={pointBalances}
+    onEditWallet={() => setView("Wallet")}
   />
-
-  {tripType === "Round trip" && (
-    <CalendarInput
-      label="Return date"
-      value={returnDate}
-      onChange={setReturnDate}
-    />
-  )}
-</div>
-
-              <select
-                value={cabin}
-                onChange={(e) => setCabin(e.target.value)}
-                className="border border-slate-300 p-3 rounded-xl w-full mt-4 bg-white"
-              >
-                <option value="Economy">Economy</option>
-                <option value="Premium Economy">Premium Economy</option>
-                <option value="Business">Business</option>
-                <option value="First">First</option>
-              </select>
-
-              <div className="mt-4">
-                <p className="text-sm font-semibold text-slate-700 mb-2">
-                  Travelers
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <TravelerCounter
-                    label="Adults"
-                    value={adults}
-                    onChange={setAdults}
-                    min={1}
-                  />
-                  <TravelerCounter
-                    label="Children"
-                    sublabel="Ages 2–11"
-                    value={children}
-                    onChange={setChildren}
-                  />
-                  <TravelerCounter
-                    label="Infants"
-                    sublabel="In seat"
-                    value={infantsInSeat}
-                    onChange={setInfantsInSeat}
-                  />
-                  <TravelerCounter
-                    label="Infants"
-                    sublabel="On lap"
-                    value={infantsOnLap}
-                    onChange={setInfantsOnLap}
-                  />
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 mt-4 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={flexibleDates}
-                  onChange={(e) => setFlexibleDates(e.target.checked)}
-                />
-                Flexible dates: show deals within 2 days
-              </label>
-
-              <label className="flex items-center gap-2 mt-4 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={includeNearbyAirports}
-                  onChange={(e) => setIncludeNearbyAirports(e.target.checked)}
-                />
-                Include nearby airports
-              </label>
-
-              <label className="flex items-center gap-2 mt-4 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={applyTransferBonuses}
-                  onChange={(e) => setApplyTransferBonuses(e.target.checked)}
-                />
-                Apply prototype transfer bonuses when available
-              </label>
-
-              <button
-                onClick={handleSearch}
-                disabled={isSearching}
-                className="mt-6 w-full bg-slate-900 hover:bg-slate-700 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
-              >
-                {isSearching ? "Searching..." : "Search Best Miles Deals"}
-              </button>
-            </div>
-
-            <div className="bg-white shadow-xl rounded-3xl p-6 border border-slate-200 h-fit">
-              <h2 className="text-xl font-bold text-slate-900">My wallet</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Results will prioritize flights you can afford with your points.
-              </p>
-
-              <div className="mt-4 space-y-3">
-                <div className="bg-slate-50 rounded-xl p-4">
-                  <p className="text-xs text-slate-500">Using</p>
-                  <p className="font-semibold text-slate-900">
-                    {selectedCardText}
-                  </p>
-                </div>
-
-                {walletSummary.length > 0 ? (
-                  walletSummary.map((item) => (
-                    <div key={item.name} className="border rounded-xl p-4">
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {item.pointsName}
-                      </p>
-                      <p className="text-sm mt-1">
-                        Balance:{" "}
-                        <span className="font-semibold">
-                          {item.balance ? item.balance : "Not entered"}
-                        </span>
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-slate-500">No cards selected.</p>
-                )}
-
-                <button
-                  onClick={() => setView("Wallet")}
-                  className="w-full border border-slate-300 rounded-xl p-3 font-semibold hover:bg-slate-50"
-                >
-                  Edit Wallet
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+)}
 
         {view === "Wallet" && (
   <WalletScreen
