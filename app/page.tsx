@@ -17,6 +17,11 @@ import AirportAutocomplete from "@/components/AirportAutocomplete";
 import CalendarInput from "@/components/CalendarInput";
 import TravelerCounter from "@/components/TravelerCounter";
 import { getBrandStyle, getLogoInitials } from "@/components/BrandBadge";
+import {
+  getAwardDurationText,
+  getAwardRouteTypeText,
+  getAwardScheduleText,
+} from "@/components/AwardText";
 
 
 type View = "Search" | "Wallet" | "Results" | "Saved" | "Data";
@@ -109,37 +114,6 @@ export default function Home() {
   const [to, setTo] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
-
-  const isRealAwardResult = (deal: FlightDealWithSource) =>
-  deal.dataSource === "seats_aero_cached";
-
-
-
-const getAwardScheduleText = (deal: FlightDealWithSource) => {
-  if (isRealAwardResult(deal)) return "Schedule details pending";
-
-  return `${deal.departureTime || "Time TBD"} → ${
-    deal.arrivalTime || "Time TBD"
-  }`;
-};
-
-const getAwardRouteTypeText = (deal: FlightDealWithSource) => {
-  if (isRealAwardResult(deal)) {
-    return deal.stops === "Direct award result"
-      ? "Direct award result"
-      : "May include connections";
-  }
-
-  if (deal.stops === "Nonstop") return "Nonstop";
-  if (deal.stopCity) return `1 stop via ${deal.stopCity}`;
-  return "1 stop";
-};
-
-const getAwardDurationText = (deal: FlightDealWithSource) => {
-  if (isRealAwardResult(deal)) return "Schedule TBD";
-  return deal.duration || "Duration TBD";
-};
-
 
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -862,11 +836,11 @@ const transferOptions = getRankedTransferOptions(deal);
           </p>
 
           <h1 className="text-4xl font-bold text-slate-900">
-            MileMind(Airline Miles Finder)
+            Vantara
           </h1>
 
           <p className="text-slate-600 mt-2">
-            Plan trips using your points, cards, balances, and transfer partners.
+            Find smarter ways to book flights using transferable credit card points.
           </p>
         </div>
 
@@ -900,7 +874,7 @@ const transferOptions = getRankedTransferOptions(deal);
     Searches use cached award availability (Medium to High Volume Routes Only)
   </p>
   <p className="text-xs text-blue-800 mt-1">
-    MileMind shows real award results when recently indexed Seats.aero cached
+    Vantara shows real award results when recently indexed Seats.aero cached
     data is available. If no cached award data exists for a route or date,
     simulated options may appear so you can still test point and transfer logic.
   </p>
@@ -1327,7 +1301,7 @@ are not included yet, so confirm schedules and stops before transferring points.
   Cached-data limitation
 </p>
 <p className="text-sm text-yellow-800 mt-1">
-  MileMind currently uses Seats.aero cached award availability. Some routes or
+  Vantara currently uses Seats.aero cached award availability. Some routes or
   dates may not return real results if they have not recently been indexed.
   In those cases, simulated results are shown for comparison only.
 </p>

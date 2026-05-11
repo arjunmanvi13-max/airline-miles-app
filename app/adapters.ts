@@ -67,6 +67,7 @@ const bookingLinks: Record<string, string> = {
   britishairways: "https://www.britishairways.com",
   qatar: "https://www.qatarairways.com",
   singapore: "https://www.singaporeair.com",
+  etihad: "https://www.etihad.com",
 };
 
 const sourceProgramNames: Record<string, string> = {
@@ -82,6 +83,7 @@ const sourceProgramNames: Record<string, string> = {
   britishairways: "British Airways Executive Club®",
   qatar: "Qatar Privilege Club®",
   singapore: "Singapore KrisFlyer®",
+  etihad: "Etihad Guest®",
 };
 
 const sourceTransferMatch: Record<string, string> = {
@@ -97,6 +99,7 @@ const sourceTransferMatch: Record<string, string> = {
   britishairways: "British Airways",
   qatar: "Qatar",
   singapore: "Singapore",
+  etihad: "Etihad",
 };
 
 const getCabinPrefix = (cabin: string) => {

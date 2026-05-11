@@ -1,3 +1,4 @@
+
 export const getLogoInitials = (name: string) => {
   return name
     .replace("®", "")
@@ -51,3 +52,4 @@ export const getBrandStyle = (name: string) => {
 
   return "bg-slate-100 text-slate-800 border-slate-200";
 };
+
