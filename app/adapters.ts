@@ -15,10 +15,11 @@ export type SearchFlightDealsInput = {
 export type FlightDealWithSource = FlightDeal & {
   dataSource: "seats_aero_cached" | "placeholder";
   dataNote: string;
-  routeConfidence: "cached_availability_only" | "simulated";
+  routeConfidence: "cached_availability_only" | "simulated" | "real_itinerary";
   seatsRemaining?: number;
   seatsAeroSource?: string;
   bookingLink?: string;
+  flightNumbers?: string;
 };
 
 const airlineNames: Record<string, string> = {
@@ -136,6 +137,21 @@ const getNumericField = (item: any, field: string) => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
+const fetchTripDetails = async (id: string) => {
+  try {
+    const response = await fetch(`/api/seats/trips?id=${id}`);
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Trip fetch failed", error);
+    return null;
+  }
+};
+
 export const searchFlightDeals = async (
   input: SearchFlightDealsInput
 ): Promise<FlightDealWithSource[]> => {
@@ -152,15 +168,16 @@ export const searchFlightDeals = async (
 
   try {
     const params = new URLSearchParams({
-      origin_airport: input.from,
-      destination_airport: input.to,
-      start_date: input.departureDate,
-      end_date: input.departureDate,
-      take: "100",
-      order_by: "lowest_mileage",
-      cabins: getSeatsAeroCabin(input.cabin),
-      include_filtered: "true",
-    });
+  origin_airport: input.from,
+  destination_airport: input.to,
+  start_date: input.departureDate,
+  end_date: input.departureDate,
+  take: "100",
+  order_by: "lowest_mileage",
+  cabins: getSeatsAeroCabin(input.cabin),
+  include_filtered: "true",
+  include_trips: "true",
+});
 
     const response = await fetch(`/api/seats?${params.toString()}`);
 
@@ -168,8 +185,13 @@ export const searchFlightDeals = async (
       throw new Error("Seats.aero request failed");
     }
 
-    const json = await response.json();
-    const cabinPrefix = getCabinPrefix(input.cabin);
+const json = await response.json();
+
+console.log("Seats.aero full response sample:", json.data?.[0]);
+
+
+
+const cabinPrefix = getCabinPrefix(input.cabin);
 
     const validResults = (json.data || [])
       .filter((item: any) => {
@@ -219,7 +241,8 @@ export const searchFlightDeals = async (
 }));
     }
 
-    return uniqueResults.map((item: any, index: number) => {
+    const enrichedResults = await Promise.all(
+  uniqueResults.map(async (item: any, index: number) => {
       const template = fallbackDeals[index % fallbackDeals.length] || {
         departureTime: "",
         arrivalTime: "",
@@ -252,6 +275,55 @@ export const searchFlightDeals = async (
       const seatsRemaining = getNumericField(item, `${cabinPrefix}RemainingSeats`);
       const direct = Boolean(item[`${cabinPrefix}Direct`]);
 
+      const tripDetails = await fetchTripDetails(item.ID);
+
+console.log("Trip details full:", tripDetails);
+
+const firstTrip = tripDetails?.data?.[0];
+
+const segments = firstTrip?.AvailabilitySegments || [];
+console.log("FIRST SEGMENT", segments[0]);
+
+const firstSegment = segments[0];
+const lastSegment = segments[segments.length - 1];
+
+const stopCount =
+  segments.length > 0 ? Math.max(0, segments.length - 1) : null;
+
+const stopCity =
+  segments.length > 1 ? segments[0]?.DestinationAirport : undefined;
+
+const aircraft =
+  segments
+    .map((segment: any) => segment.AircraftName)
+    .filter(Boolean)
+    .join(", ");
+
+const flightNumbers =
+  segments
+    .map(
+      (segment: any) =>
+        segment.FlightNumber
+    )
+    .join(", ");
+
+const formattedSegments = segments.map((segment: any) => ({
+  from: segment.OriginAirport,
+  to: segment.DestinationAirport,
+  departureTime: segment.DepartsAt,
+  arrivalTime: segment.ArrivesAt,
+  duration: segment.Duration
+  ? `${Math.floor(segment.Duration / 60)}h ${
+      segment.Duration % 60
+    }m`
+  : "",
+  aircraft: segment.AircraftName || "",
+  airline:
+  airlineNames[segment.Source?.toUpperCase()] ||
+  segment.Source ||
+  "",
+}));
+
       const programName = getProgramName(item.Source);
 const airlineName = getAirlineName(airlineCodes, programName);
 
@@ -267,24 +339,44 @@ const airlineName = getAirlineName(airlineCodes, programName);
         from: item.Route?.OriginAirport || input.from,
         to: item.Route?.DestinationAirport || input.to,
         date: item.Date,
-        stops: "Stops unknown",
+        stops:
+  stopCount === null
+    ? "Stops unknown"
+    : stopCount === 0
+    ? "Nonstop"
+    : `${stopCount} stop${stopCount > 1 ? "s" : ""}`,
+
 cabin: input.cabin,
-departureTime: "",
-        arrivalTime: "",
-        duration: "",
-        aircraft: "",
-        stopCity: undefined,
-        segments: [],
+
+departureTime: firstSegment?.DepartsAt || "",
+arrivalTime: lastSegment?.ArrivesAt || "",
+
+duration: firstTrip?.TotalDuration
+  ? `${Math.floor(firstTrip.TotalDuration / 60)}h ${
+      firstTrip.TotalDuration % 60
+    }m`
+  : "",
+
+aircraft,
+stopCity,
+segments: formattedSegments,
+flightNumbers,
         tag: index === 0 ? "Best Real Award" : "Cached Award",
         score: Math.max(50, 100 - index * 5),
         seatsRemaining,
         seatsAeroSource: item.Source,
-        dataSource: "seats_aero_cached",
-routeConfidence: "cached_availability_only",
+        dataSource: "seats_aero_cached" as const,
+routeConfidence:
+  segments.length > 0
+    ? ("real_itinerary" as const)
+    : ("cached_availability_only" as const),
 dataNote:
-  `Real cached Seats.aero award availability through ${programName}. Cabin availability, points, taxes, and seats are cached. Exact schedule, flight number, aircraft, and nonstop/connection status are not confirmed here.`,
-      };
-    });
+  `Real itinerary details were retrieved from Seats.aero trip data.`,
+         };
+      }),
+    );
+
+return enrichedResults;
   } catch (error) {
     console.error(error);
 

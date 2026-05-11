@@ -7,7 +7,10 @@ import {
   getAwardRouteTypeText,
   getAwardScheduleText,
   getAwardSourceLabel,
+    formatAirportTime,
 } from "@/components/AwardText";
+
+
 
 import {
   getBrandStyle,
@@ -51,11 +54,26 @@ export default function ResultCard({
 const isExpanded = expandedDeals.includes(dealId);
 const returnPreview =
   tripType === "Round trip" ? buildReturnPreview(deal, returnDate) : null;
-    const centsPerMile = getCentsPerMile(deal);
-    const label = getDealLabel(centsPerMile);
-    const style = getDealStyle(centsPerMile);
+    const isRealCached =
+  "dataSource" in deal &&
+  deal.dataSource === "seats_aero_cached";
+
+const centsPerMile = isRealCached
+  ? null
+  : getCentsPerMile(deal);
+
+const label =
+  centsPerMile !== null
+    ? getDealLabel(centsPerMile)
+    : "Real";
+
+const style =
+  centsPerMile !== null
+    ? getDealStyle(centsPerMile)
+    : "bg-blue-100 text-blue-800";
     const recommendation = getRecommendation(deal);
-const transferOptions = getRankedTransferOptions(deal);
+
+
 
     const {
       transfer,
@@ -67,6 +85,9 @@ const transferOptions = getRankedTransferOptions(deal);
       canBook,
       pointsShort,
     } = getDealTotals(deal);
+
+    const transferOptions = getRankedTransferOptions(deal);
+    const displayProgram = transfer?.program || deal.program;
 
     return (
       <div
@@ -91,13 +112,13 @@ const transferOptions = getRankedTransferOptions(deal);
 </p>
     <div className="flex items-center gap-2 mt-1">
       <span
-        className={`w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-bold ${getBrandStyle(
-          deal.program
-        )}`}
-      >
-        {getLogoInitials(deal.program)}
-      </span>
-      <p className="text-xs text-slate-500">{deal.program}</p>
+  className={`w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-bold ${getBrandStyle(
+    displayProgram
+  )}`}
+>
+  {getLogoInitials(displayProgram)}
+</span>
+<p className="text-xs text-slate-500">{displayProgram}</p>
     </div>
   </div>
 </div>
@@ -324,16 +345,38 @@ const transferOptions = getRankedTransferOptions(deal);
           </div>
 
           <div className="bg-slate-50 rounded-xl p-4">
-            <p className="text-xs text-slate-500">Est. Total Cash Price</p>
-            <p className="font-bold text-lg">${totalCashPrice}</p>
-          </div>
+  <p className="text-xs text-slate-500">
+    Cash Price
+  </p>
 
-          <div className="bg-slate-50 rounded-xl p-4">
-            <p className="text-xs text-slate-500">Point Value</p>
-            <p className="font-bold text-lg">
-              {centsPerMile.toFixed(2)}¢ / point
-            </p>
-          </div>
+  <p className="text-lg font-semibold text-slate-500 mt-1">
+    {isRealCached ? "N/A" : `$${totalCashPrice}`}
+  </p>
+
+  {isRealCached && (
+    <p className="text-xs text-slate-400 mt-1">
+      Cash fares not provided by Seats.aero
+    </p>
+  )}
+</div>
+
+<div className="bg-slate-50 rounded-xl p-4">
+  <p className="text-xs text-slate-500">Point Value</p>
+
+  <p className="text-lg font-semibold text-slate-500 mt-1">
+    {centsPerMile !== null
+      ? `${centsPerMile.toFixed(2)}¢ / point`
+      : "N/A"}
+  </p>
+
+  {isRealCached && (
+    <p className="text-xs text-slate-400 mt-1">
+      Requires real cash fare
+    </p>
+  )}
+</div>
+
+        
         </div>
 
         {transfer ? (
@@ -455,7 +498,7 @@ const transferOptions = getRankedTransferOptions(deal);
 
         {"dataNote" in deal && (
   <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-900">
-    {deal.dataNote}
+    {deal.dataNote.replace(deal.program, displayProgram)}
   </div>
 )}
 {deal.bookingLink && (
@@ -465,7 +508,7 @@ const transferOptions = getRankedTransferOptions(deal);
     rel="noopener noreferrer"
     className="mt-4 block w-full bg-slate-900 text-white text-center rounded-xl p-3 font-semibold hover:bg-slate-700"
   >
-    Check availability with {deal.program}
+    Check availability with {displayProgram}
   </a>
 )}
 

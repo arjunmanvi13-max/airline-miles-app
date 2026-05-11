@@ -1,5 +1,24 @@
 import { FlightDealWithSource } from "@/app/adapters";
 
+
+
+export const formatAirportTime = (value?: string, airportCode?: string) => {
+  if (!value) return "";
+
+  const timeMatch = value.match(/T(\d{2}):(\d{2})/);
+
+  if (!timeMatch) return value;
+
+  const hour = Number(timeMatch[1]);
+  const minute = timeMatch[2];
+
+  const displayHour = hour % 12 || 12;
+  const period = hour >= 12 ? "PM" : "AM";
+
+  return `${displayHour}:${minute} ${period}`;
+};
+
+
 export const isRealAwardResult = (deal: FlightDealWithSource) =>
   deal.dataSource === "seats_aero_cached";
 
@@ -12,14 +31,26 @@ export const getAwardSourceLabel = (deal: FlightDealWithSource) => {
 };
 
 export const getAwardScheduleText = (deal: FlightDealWithSource) => {
+  if (deal.departureTime || deal.arrivalTime) {
+    return `${formatAirportTime(deal.departureTime, deal.from) || "Time TBD"} → ${
+  formatAirportTime(deal.arrivalTime, deal.to) || "Time TBD"
+}`;
+  }
+
   if (isRealAwardResult(deal)) return "Schedule not available in cached data";
 
-  return `${deal.departureTime || "Time TBD"} → ${
-    deal.arrivalTime || "Time TBD"
-  }`;
+  return `${formatAirportTime(deal.departureTime, deal.from) || "Time TBD"} → ${
+  formatAirportTime(deal.arrivalTime, deal.to) || "Time TBD"
+}`;
 };
 
 export const getAwardRouteTypeText = (deal: FlightDealWithSource) => {
+  if (isRealAwardResult(deal) && deal.stops && deal.stops !== "Stops unknown") {
+    if (deal.stops === "Nonstop") return "Nonstop";
+    if (deal.stopCity) return `${deal.stops} via ${deal.stopCity}`;
+    return deal.stops;
+  }
+
   if (isRealAwardResult(deal)) {
     return "Stops unknown — confirm before booking";
   }
@@ -30,6 +61,7 @@ export const getAwardRouteTypeText = (deal: FlightDealWithSource) => {
 };
 
 export const getAwardDurationText = (deal: FlightDealWithSource) => {
+  if (deal.duration) return deal.duration;
   if (isRealAwardResult(deal)) return "Duration not available";
-  return deal.duration || "Duration TBD";
+  return "Duration TBD";
 };
