@@ -1,5 +1,5 @@
 import { cardEcosystems, transferPartners } from "@/app/data";
-import Image from "next/image";
+
 
 type PointBalances = Record<string, string>;
 
@@ -27,7 +27,7 @@ export default function WalletScreen({
       <h2 className="text-2xl font-bold text-slate-900">My Wallet</h2>
 
       <p className="text-sm text-slate-500 mt-1">
-        Select your point ecosystems and enter optional balances.
+        Select your transferable points ecosystems and enter optional balances.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-5">

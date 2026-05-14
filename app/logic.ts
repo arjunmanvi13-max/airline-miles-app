@@ -13,6 +13,7 @@ arrivalTime: string;
 duration: string;
 aircraft: string;
 stopCity?: string;
+flightNumber?: string;
 
 segments: {
   from: string;
@@ -22,7 +23,8 @@ segments: {
   duration: string;
   aircraft: string;
   airline: string;
-  
+  flightNumber?: string;
+
 }[];
   airline: string;
   transferAirlineMatch?: string;

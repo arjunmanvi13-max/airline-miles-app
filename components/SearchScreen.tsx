@@ -94,7 +94,7 @@ export default function SearchScreen({
             Searches use cached award availability
           </p>
           <p className="text-xs text-blue-800 mt-1">
-            CabinWise shows real award results when recently indexed Seats.aero
+            Vantara shows real award results when recently indexed Seats.aero
             cached data is available. If no cached award data exists for a route
             or date, simulated options may appear so you can still test point
             and transfer logic.
@@ -218,9 +218,9 @@ export default function SearchScreen({
   <button
     onClick={handleSearch}
     disabled={isSearching}
-    className="w-full bg-slate-900 hover:bg-slate-700 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
+    className="w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
   >
-    {isSearching ? "Searching..." : "Search Best Miles Deals"}
+    {isSearching ? "Searching award space..." : "Search award options"}
   </button>
 </div>
       </div>

@@ -26,22 +26,39 @@ export const isSimulatedAwardResult = (deal: FlightDealWithSource) =>
   !isRealAwardResult(deal);
 
 export const getAwardSourceLabel = (deal: FlightDealWithSource) => {
-  if (isRealAwardResult(deal)) return "Real cached award";
+  if (deal.routeConfidence === "real_itinerary") {
+    return "Real itinerary";
+  }
+
+  if (isRealAwardResult(deal)) {
+    return "Real cached award";
+  }
+
   return "Simulated fallback";
 };
 
 export const getAwardScheduleText = (deal: FlightDealWithSource) => {
   if (deal.departureTime || deal.arrivalTime) {
-    return `${formatAirportTime(deal.departureTime, deal.from) || "Time TBD"} → ${
-  formatAirportTime(deal.arrivalTime, deal.to) || "Time TBD"
-}`;
+    const departure = new Date(deal.departureTime);
+    const arrival = new Date(deal.arrivalTime);
+
+    const nextDay =
+      arrival.getDate() !== departure.getDate();
+
+    return `${
+      formatAirportTime(deal.departureTime, deal.from) || "Time TBD"
+    } → ${
+      formatAirportTime(deal.arrivalTime, deal.to) || "Time TBD"
+    }${nextDay ? " (+1 day)" : ""}`;
   }
 
-  if (isRealAwardResult(deal)) return "Schedule not available in cached data";
+  if (isRealAwardResult(deal)) {
+    return "Schedule not available in cached data";
+  }
 
   return `${formatAirportTime(deal.departureTime, deal.from) || "Time TBD"} → ${
-  formatAirportTime(deal.arrivalTime, deal.to) || "Time TBD"
-}`;
+    formatAirportTime(deal.arrivalTime, deal.to) || "Time TBD"
+  }`;
 };
 
 export const getAwardRouteTypeText = (deal: FlightDealWithSource) => {

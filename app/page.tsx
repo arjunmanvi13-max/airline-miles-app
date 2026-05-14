@@ -370,8 +370,19 @@ const pointsShort = transfer ? transfer.pointsShort : 0;
   const handleSearch = async () => {
   if (tripType === "Multi-city") return;
 
+  if (!from || !to || !departureDate) {
+    alert("Please choose a departure airport, arrival airport, and departure date.");
+    return;
+  }
+
+  if (from === to) {
+    alert("Departure and arrival airports must be different.");
+    return;
+  }
+
   setIsSearching(true);
-  setView("Results");
+setExpandedDeals([]);
+setView("Results");
 
   const deals = await searchFlightDeals({
     from,

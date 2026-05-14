@@ -183,12 +183,16 @@ export const searchFlightDeals = async (
     const response = await fetch(`/api/seats?${params.toString()}`);
 
     if (!response.ok) {
-      throw new Error("Seats.aero request failed");
-    }
+  const errorData = await response.json().catch(() => null);
+
+  throw new Error(
+    errorData?.error || "Seats.aero request failed"
+  );
+}
 
 const json = await response.json();
 
-console.log("Seats.aero full response sample:", json.data?.[0]);
+
 
 
 
@@ -278,12 +282,12 @@ const cabinPrefix = getCabinPrefix(input.cabin);
 
       const tripDetails = await fetchTripDetails(item.ID);
 
-console.log("Trip details full:", tripDetails);
+
 
 const firstTrip = tripDetails?.data?.[0];
 
 const segments = firstTrip?.AvailabilitySegments || [];
-console.log("FIRST SEGMENT", segments[0]);
+
 
 const firstSegment = segments[0];
 const lastSegment = segments[segments.length - 1];
@@ -314,15 +318,19 @@ const formattedSegments = segments.map((segment: any) => ({
   departureTime: segment.DepartsAt,
   arrivalTime: segment.ArrivesAt,
   duration: segment.Duration
+  
+  
   ? `${Math.floor(segment.Duration / 60)}h ${
       segment.Duration % 60
     }m`
   : "",
   aircraft: segment.AircraftName || "",
-  airline:
+airline:
+  getProgramName(segment.Source) ||
   airlineNames[segment.Source?.toUpperCase()] ||
   segment.Source ||
   "",
+  flightNumber: segment.FlightNumber || "",
 }));
 
       const programName = getProgramName(item.Source);
@@ -336,7 +344,7 @@ const airlineName = getAirlineName(airlineCodes, programName);
         taxes,
         program: programName,
         bookingLink: bookingLinks[item.Source],
-        estimatedCashPrice: Math.round(miles * 0.018),
+        estimatedCashPrice: 0,
         from: item.Route?.OriginAirport || input.from,
         to: item.Route?.DestinationAirport || input.to,
         date: item.Date,
@@ -362,7 +370,12 @@ aircraft,
 stopCity,
 segments: formattedSegments,
 flightNumbers,
-        tag: index === 0 ? "Best Real Award" : "Cached Award",
+        tag:
+  index === 0
+    ? "Best Available Option"
+    : direct
+    ? "Nonstop Option"
+    : "Available Award",
         score: Math.max(50, 100 - index * 5),
         seatsRemaining,
         seatsAeroSource: item.Source,

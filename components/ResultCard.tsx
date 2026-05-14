@@ -65,7 +65,7 @@ const centsPerMile = isRealCached
 const label =
   centsPerMile !== null
     ? getDealLabel(centsPerMile)
-    : "Real";
+    : null;
 
 const style =
   centsPerMile !== null
@@ -135,6 +135,13 @@ const style =
     }`}
   >
     {getAwardSourceLabel(deal)}
+  </span>
+)}
+
+{deal.seatsRemaining && deal.dataSource === "seats_aero_cached" && (
+  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
+    {deal.seatsRemaining} seat
+    {deal.seatsRemaining > 1 ? "s" : ""} left
   </span>
 )}
 
@@ -214,16 +221,15 @@ const style =
 
 {isExpanded && (
   <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
-    {"dataSource" in deal && deal.dataSource === "seats_aero_cached" ? (
+    {!deal.segments || deal.segments.length === 0 ? (
   <div>
     <p className="font-semibold text-slate-900 mb-2">
       Schedule details
     </p>
     <p className="text-sm text-slate-600">
-  This is real cached award availability, but it is not a verified full
-  itinerary. Cabin availability, points, taxes, and seat count may be available;
-  exact flight times, flight numbers, layover airports, aircraft, and nonstop
-  status are not confirmed in this view.
+  This result comes from real cached award availability data. Availability,
+mileage cost, taxes, and seat counts are based on Seats.aero data and may
+change before booking confirmation.
 </p>
     <p className="text-sm text-slate-800 mt-3 font-semibold">
       Route: {deal.from} → {deal.to}
@@ -247,12 +253,22 @@ const style =
                 {segment.from} → {segment.to}
               </p>
               <p className="text-sm text-slate-600">
-                {segment.departureTime} → {segment.arrivalTime} •{" "}
-                {segment.duration}
+                {formatAirportTime(segment.departureTime, segment.from)} →{" "}
+{formatAirportTime(segment.arrivalTime, segment.to)} •{" "}
+{segment.duration}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                {segment.airline} • {deal.cabin} • {segment.aircraft}
-              </p>
+{segment.airline}
+
+{segment.flightNumber
+  ? ` • Flight ${segment.flightNumber}`
+  : ""}
+
+{" • "}
+
+{deal.cabin}
+  {segment.aircraft ? ` • ${segment.aircraft}` : ""}
+</p>
             </div>
 
             <span className="text-xs bg-white border border-slate-200 rounded-full px-3 py-1 h-fit text-slate-600">
@@ -263,7 +279,29 @@ const style =
           {deal.segments.length > 1 &&
             segmentIndex < deal.segments.length - 1 && (
               <div className="mt-3 text-xs text-slate-500 border-l-2 border-slate-300 pl-3">
-                Layover in {deal.stopCity} • approx. 2h
+                <div className="mt-3 text-xs text-slate-500 border-l-2 border-slate-300 pl-3">
+  Layover in {segment.to} •{" "}
+  {(() => {
+    const currentArrival = new Date(segment.arrivalTime);
+
+    const nextSegment = deal.segments[segmentIndex + 1];
+
+    if (!nextSegment) return "";
+
+    const nextDeparture = new Date(nextSegment.departureTime);
+
+    const diffMs =
+      nextDeparture.getTime() - currentArrival.getTime();
+
+    const totalMinutes = Math.floor(diffMs / 60000);
+
+    const hours = Math.floor(totalMinutes / 60);
+
+    const minutes = totalMinutes % 60;
+
+    return `${hours}h ${minutes}m`;
+  })()}
+</div>
               </div>
             )}<p className="font-semibold text-slate-900 mb-3"></p>
         </div>
@@ -316,9 +354,13 @@ const style =
             </p>
           </div>
 
-          <span className={`${style} h-fit px-3 py-1 rounded-full text-sm font-semibold`}>
-            {label}
-          </span>
+          {label && (
+  <span
+    className={`${style} h-fit px-3 py-1 rounded-full text-sm font-semibold`}
+  >
+    {label}
+  </span>
+)}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mt-5">
@@ -467,6 +509,7 @@ const style =
             )}
           </div>
         ) : (
+          
           <div className="mt-5 bg-slate-50 rounded-xl p-4">
             <p className="font-semibold text-slate-800 mb-1">
               Best Booking Strategy
@@ -477,38 +520,35 @@ const style =
           </div>
         )}
 
-        <div className="mt-5 bg-slate-50 rounded-xl p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-            <p className="font-semibold text-slate-800">
-              Miles vs Cash Recommendation:
-            </p>
-            
+        {!isRealCached && (
+  <div className="mt-5 bg-slate-50 rounded-xl p-4">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+      <p className="font-semibold text-slate-800">
+        Miles vs Cash Recommendation:
+      </p>
 
-            <span
-              className={`${recommendation.style} px-3 py-1 rounded-full text-xs font-semibold`}
-            >
-              {recommendation.label}
-            </span>
-          </div>
+      <span
+        className={`${recommendation.style} px-3 py-1 rounded-full text-xs font-semibold`}
+      >
+        {recommendation.label}
+      </span>
+    </div>
 
-          <p className="text-sm text-slate-600">
-            {recommendation.explanation}
-          </p>
-        </div>
-
-        {"dataNote" in deal && (
-  <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-900">
-    {deal.dataNote.replace(deal.program, displayProgram)}
+    <p className="text-sm text-slate-600">
+      {recommendation.explanation}
+    </p>
   </div>
 )}
+
+       
 {deal.bookingLink && (
   <a
     href={deal.bookingLink}
     target="_blank"
     rel="noopener noreferrer"
-    className="mt-4 block w-full bg-slate-900 text-white text-center rounded-xl p-3 font-semibold hover:bg-slate-700"
+    className="mt-4 block w-full bg-purple-700 text-white text-center rounded-xl p-3 font-semibold hover:bg-purple-800"
   >
-    Check availability with {displayProgram}
+    Continue to {displayProgram}
   </a>
 )}
 

@@ -83,12 +83,11 @@ export default function ResultsScreen({
         </div>
       </div>
 
-      {!isSearching && hasRealResults && (
+{!isSearching && hasRealResults && (
   <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 text-sm text-blue-900">
-    Showing real cached award availability from Seats.aero. Cached data confirms
-    award availability, but exact schedules, flight numbers, aircraft, layovers,
-    and whether the route is nonstop are not guaranteed here. Confirm all details
-    before transferring points.
+    Showing real cached award availability from Seats.aero. Some results include
+    enriched itinerary details such as segments, aircraft, flight numbers, and
+    seat counts. Always confirm final availability before transferring points.
   </div>
 )}
 
@@ -152,10 +151,21 @@ export default function ResultsScreen({
 )}
 
       {!isSearching && displayedResults.length === 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 text-slate-500">
-          No results yet. Start from the Search screen.
-        </div>
-      )}
+  <div className="bg-white border border-slate-200 rounded-2xl p-6 text-slate-700">
+    <p className="font-semibold text-slate-900">No results to show yet.</p>
+    <p className="text-sm text-slate-500 mt-1">
+      Try starting a search, changing dates, choosing a different cabin, or
+      turning off the nonstop-only filter.
+    </p>
+
+    <button
+      onClick={onEditSearch}
+      className="mt-4 border border-slate-300 rounded-xl px-4 py-3 font-semibold hover:bg-slate-50"
+    >
+      Edit Search
+    </button>
+  </div>
+)}
 
       {!isSearching &&
         displayedResults.map((deal, index) => renderResultCard(deal, index))}
