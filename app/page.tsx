@@ -170,7 +170,7 @@ export default function LandingPage() {
           </div>
 
           <form
-  action="mailto:hello@vantara.app?subject=Vantara Beta Request"
+  action="mailto:vantara747@gmail.com?subject=Vantara Beta Request"
   method="post"
   encType="text/plain"
   className="rounded-3xl bg-white text-slate-900 p-6 shadow-2xl"
@@ -188,7 +188,7 @@ export default function LandingPage() {
                   Email
                 </label>
                 <input
-                  name="email"
+                  name="Email"
                   type="email"
                   required
                   placeholder="you@example.com"
@@ -201,7 +201,7 @@ export default function LandingPage() {
                   Home airport
                 </label>
                 <input
-                  name="homeAirport"
+                  name="Home airport"
                   type="text"
                   placeholder="JFK, LAX, ATL..."
                   className="mt-2 w-full border border-slate-300 rounded-xl p-3 text-slate-900"
@@ -213,7 +213,7 @@ export default function LandingPage() {
                   Main points ecosystem
                 </label>
                 <select
-                  name="pointsEcosystem"
+                  name="Main points ecosystem"
                   className="mt-2 w-full border border-slate-300 rounded-xl p-3 bg-white text-slate-900"
                 >
                   <option>Amex</option>
