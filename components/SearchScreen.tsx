@@ -214,7 +214,7 @@ export default function SearchScreen({
           Apply prototype transfer bonuses when available
         </label>
 
-        <div className="sticky bottom-0 bg-white pt-4 pb-2 mt-6 border-t border-slate-200 md:static md:border-0 md:p-0">
+        <div className="sticky bottom-0 -mx-6 px-6 bg-white/95 backdrop-blur pt-4 pb-3 mt-6 border-t border-slate-200 md:static md:mx-0 md:px-0 md:border-0 md:bg-transparent md:backdrop-blur-0 md:p-0">
   <button
     onClick={handleSearch}
     disabled={isSearching}

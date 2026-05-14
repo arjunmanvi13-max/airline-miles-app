@@ -1,546 +1,251 @@
-"use client";
+import Link from "next/link";
 
-import { useEffect, useMemo, useState } from "react";
-import { cardEcosystems } from "./data";
-import {
-  FlightDeal,
-  getCentsPerMile,
-  getDealLabel,
-  getDealStyle,
-  getRecommendation,
-  getTransferOptions,
-} from "./logic";
-
-
-import { FlightDealWithSource, searchFlightDeals } from "./adapters";
-import AirportAutocomplete from "@/components/AirportAutocomplete";
-import CalendarInput from "@/components/CalendarInput";
-import TravelerCounter from "@/components/TravelerCounter";
-import { getBrandStyle, getLogoInitials } from "@/components/BrandBadge";
-import {
-  getAwardDurationText,
-  getAwardRouteTypeText,
-  getAwardScheduleText,
-} from "@/components/AwardText";
-import DataNotes from "@/components/DataNotes";
-import SavedTrips from "@/components/SavedTrips";
-import WalletScreen from "@/components/WalletScreen";
-import SearchScreen from "@/components/SearchScreen";
-import ResultsScreen from "@/components/ResultsScreen";
-import ResultCard from "@/components/ResultCard";
-
-
-type View = "Search" | "Wallet" | "Results" | "Saved" | "Data";
-type TripType = "Round trip" | "One way" | "Multi-city";
-type PointBalances = Record<string, string>;
-type SortMode =
-  | "Best overall"
-  | "Lowest points"
-  | "Lowest taxes"
-  | "Lowest cash price"
-  | "Nonstop first";
-
-  type ReturnPreview = {
-  from: string;
-  to: string;
-  date: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-  stops: string;
-  stopCity?: string;
-};
-
-function parseDurationToHours(duration: string) {
-  const hoursMatch = duration.match(/(\d+)h/);
-  const minutesMatch = duration.match(/(\d+)m/);
-
-  const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
-  const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
-
-  return hours + minutes / 60;
-}
-
-function formatTimeFromHour(hour: number) {
-  const totalMinutes = Math.round(hour * 60);
-  const normalizedMinutes = ((totalMinutes % 1440) + 1440) % 1440;
-
-  const hours24 = Math.floor(normalizedMinutes / 60);
-  const minutes = normalizedMinutes % 60;
-
-  const suffix = hours24 >= 12 ? "PM" : "AM";
-  const displayHour = hours24 % 12 === 0 ? 12 : hours24 % 12;
-
-  return `${displayHour}:${String(minutes).padStart(2, "0")} ${suffix}`;
-}
-
-function buildReturnPreview(deal: FlightDeal, returnDate: string): ReturnPreview {
-  const durationHours = parseDurationToHours(deal.duration || "8h 00m");
-  const departureHour = 9 + (deal.airline.length % 5) * 2;
-
-  return {
-    from: deal.to,
-    to: deal.from,
-    date: returnDate || deal.date,
-    departureTime: formatTimeFromHour(departureHour),
-    arrivalTime: formatTimeFromHour(departureHour + durationHours),
-    duration: deal.duration || "Duration TBD",
-    stops: deal.stops,
-    stopCity: deal.stopCity,
-  };
-}
-
-const defaultBalances: PointBalances = {
-  Amex: "",
-  Chase: "",
-  "Capital One": "",
-  Bilt: "",
-  Citi: "",
-  "Wells Fargo": "",
-};
-
-
-
-
-
-
-
-export default function Home() {
-  
-  const [expandedCardDatabases, setExpandedCardDatabases] = useState<string[]>([]);
-  const [expandedDeals, setExpandedDeals] = useState<string[]>([]);
-  const [view, setView] = useState<View>("Search");
-  const [tripType, setTripType] = useState<TripType>("Round trip");
-  const [cabin, setCabin] = useState("Economy");
-  const [selectedCards, setSelectedCards] = useState<string[]>(["Amex"]);
-  const [pointBalances, setPointBalances] =
-    useState<PointBalances>(defaultBalances);
-
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [departureDate, setDepartureDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infantsInSeat, setInfantsInSeat] = useState(0);
-  const [infantsOnLap, setInfantsOnLap] = useState(0);
-
-  const [flexibleDates, setFlexibleDates] = useState(false);
-  const [includeNearbyAirports, setIncludeNearbyAirports] = useState(true);
-  const [applyTransferBonuses, setApplyTransferBonuses] = useState(true);
-
-  const [results, setResults] = useState<FlightDealWithSource[]>([]);
-  const [savedTrips, setSavedTrips] = useState<FlightDeal[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const [sortMode, setSortMode] = useState<SortMode>("Best overall");
-  const [nonstopOnly, setNonstopOnly] = useState(false);
-
-  const paidTravelers = adults + children + infantsInSeat;
-  const tripMultiplier = tripType === "Round trip" ? 2 : 1;
-  const totalMultiplier = paidTravelers * tripMultiplier;
-
-  const hasRealResults = results.some(
-  (deal) => "dataSource" in deal && deal.dataSource === "seats_aero_cached"
-);
-
-const hasOnlyPlaceholderResults =
-  results.length > 0 && results.every((deal) => deal.dataSource === "placeholder");
-  
-
-  const toggleExpandedDeal = (dealId: string) => {
-  setExpandedDeals((current) =>
-    current.includes(dealId)
-      ? current.filter((id) => id !== dealId)
-      : [...current, dealId]
-  );
-};
-
-  useEffect(() => {
-    const savedProfile = localStorage.getItem("airlineMilesProfile");
-    const savedTripData = localStorage.getItem("savedTrips");
-
-    if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
-      setFrom(profile.homeAirport || "");
-      setCabin(profile.preferredCabin || "Economy");
-      setSelectedCards(profile.cards || ["Amex"]);
-      setTripType(profile.tripType || "Round trip");
-      setAdults(profile.adults || 1);
-      setChildren(profile.children || 0);
-      setInfantsInSeat(profile.infantsInSeat || 0);
-      setInfantsOnLap(profile.infantsOnLap || 0);
-      setPointBalances(profile.pointBalances || defaultBalances);
-    }
-
-    if (savedTripData) {
-      setSavedTrips(JSON.parse(savedTripData));
-    }
-  }, []);
-
-  const getNumericBalance = (card: string) => {
-    const rawBalance = pointBalances[card];
-
-    if (!rawBalance || rawBalance.trim() === "") return null;
-
-    const numericValue = Number(rawBalance.replace(/,/g, ""));
-    return Number.isNaN(numericValue) ? null : numericValue;
-  };
-
-  const getRankedTransferOptions = (deal: FlightDeal) => {
-  const options = getTransferOptions(
-    deal,
-    selectedCards,
-    applyTransferBonuses
-  );
-
-  return options
-    .map((option) => {
-      const totalPoints = option.requiredCardPoints * totalMultiplier;
-      const balance = getNumericBalance(option.card);
-      const balanceKnown = balance !== null;
-      const canBook = balanceKnown && balance >= totalPoints;
-      const pointsShort = balanceKnown
-        ? Math.max(0, totalPoints - balance)
-        : 0;
-
-      const rank = canBook ? 0 : balanceKnown ? 2 : 1;
-
-      return {
-        ...option,
-        totalPoints,
-        balance,
-        balanceKnown,
-        canBook,
-        pointsShort,
-        rank,
-      };
-    })
-    .sort((a, b) => {
-      if (a.rank !== b.rank) return a.rank - b.rank;
-      return a.totalPoints - b.totalPoints;
-    });
-};
-
-const getRecommendedTransferOption = (deal: FlightDeal) => {
-  const ranked = getRankedTransferOptions(deal);
-  return ranked.length > 0 ? ranked[0] : null;
-};
-
-  const getDealTotals = (deal: FlightDeal) => {
-const recommendedTransfer = getRecommendedTransferOption(deal);
-const transfer = recommendedTransfer;
-
-const totalCardPoints = transfer
-  ? transfer.totalPoints
-  : deal.miles * totalMultiplier;
-
-const balance = transfer ? transfer.balance : null;
-const balanceKnown = transfer ? transfer.balanceKnown : false;
-const canBook = transfer ? transfer.canBook : false;
-const pointsShort = transfer ? transfer.pointsShort : 0;
-
-    return {
-      transfer,
-      totalCardPoints,
-      totalAirlineMiles: deal.miles * totalMultiplier,
-      totalTaxes: deal.taxes * totalMultiplier,
-      totalCashPrice: deal.estimatedCashPrice * totalMultiplier,
-      balance,
-      balanceKnown,
-      canBook,
-      pointsShort,
-    };
-  };
-
-  const getBookabilityRank = (deal: FlightDeal) => {
-    const totals = getDealTotals(deal);
-
-    if (!totals.transfer) return 3;
-    if (!totals.balanceKnown) return 1;
-    if (totals.canBook) return 0;
-    return 2;
-  };
-
-  const displayedResults = useMemo(() => {
-    let filtered = [...results];
-
-    if (nonstopOnly) {
-      filtered = filtered.filter((deal) => deal.stops === "Nonstop");
-    }
-
-    return filtered.sort((a, b) => {
-      const totalsA = getDealTotals(a);
-      const totalsB = getDealTotals(b);
-
-      const rankA = getBookabilityRank(a);
-      const rankB = getBookabilityRank(b);
-
-      if (sortMode === "Best overall") {
-        if (rankA !== rankB) return rankA - rankB;
-        return b.score - a.score;
-      }
-
-      if (sortMode === "Lowest points") {
-        return totalsA.totalCardPoints - totalsB.totalCardPoints;
-      }
-
-      if (sortMode === "Lowest taxes") {
-        return totalsA.totalTaxes - totalsB.totalTaxes;
-      }
-
-      if (sortMode === "Lowest cash price") {
-        return totalsA.totalCashPrice - totalsB.totalCashPrice;
-      }
-
-      if (sortMode === "Nonstop first") {
-        if (a.stops === b.stops) return b.score - a.score;
-        return a.stops === "Nonstop" ? -1 : 1;
-      }
-
-      return b.score - a.score;
-    });
-  }, [
-    results,
-    nonstopOnly,
-    sortMode,
-    selectedCards,
-    applyTransferBonuses,
-    totalMultiplier,
-    pointBalances,
-  ]);
-
-  const toggleCard = (card: string) => {
-    setSelectedCards((current) =>
-      current.includes(card)
-        ? current.filter((item) => item !== card)
-        : [...current, card]
-    );
-  };
-
-  const toggleCardDatabase = (cardName: string) => {
-  setExpandedCardDatabases((current) =>
-    current.includes(cardName)
-      ? current.filter((name) => name !== cardName)
-      : [...current, cardName]
-  );
-};
-
-  const updatePointBalance = (card: string, value: string) => {
-    const cleanedValue = value.replace(/[^\d,]/g, "");
-
-    setPointBalances((current) => ({
-      ...current,
-      [card]: cleanedValue,
-    }));
-  };
-
-  const saveProfile = () => {
-    localStorage.setItem(
-      "airlineMilesProfile",
-      JSON.stringify({
-        homeAirport: from,
-        preferredCabin: cabin,
-        cards: selectedCards,
-        tripType,
-        adults,
-        children,
-        infantsInSeat,
-        infantsOnLap,
-        pointBalances,
-      })
-    );
-
-    alert("Profile saved on this browser.");
-  };
-
-  const saveTrip = (deal: FlightDeal) => {
-    const updated = [...savedTrips, deal];
-    setSavedTrips(updated);
-    localStorage.setItem("savedTrips", JSON.stringify(updated));
-  };
-
-  const removeSavedTrip = (indexToRemove: number) => {
-    const updated = savedTrips.filter((_, index) => index !== indexToRemove);
-    setSavedTrips(updated);
-    localStorage.setItem("savedTrips", JSON.stringify(updated));
-  };
-
-  const handleSearch = async () => {
-  if (tripType === "Multi-city") return;
-
-  if (!from || !to || !departureDate) {
-    alert("Please choose a departure airport, arrival airport, and departure date.");
-    return;
-  }
-
-  if (from === to) {
-    alert("Departure and arrival airports must be different.");
-    return;
-  }
-
-  setIsSearching(true);
-setExpandedDeals([]);
-setView("Results");
-
-  const deals = await searchFlightDeals({
-    from,
-    to,
-    departureDate,
-    returnDate,
-    cabin,
-    flexibleDates,
-    selectedCards,
-    includeNearbyAirports,
-    applyTransferBonuses,
-  });
-
-  setTimeout(() => {
-    setResults(deals);
-    setIsSearching(false);
-  }, 700);
-};
-
-
-const renderResultCard = (
-  deal: FlightDealWithSource,
-  index: number
-) => (
-  <ResultCard
-  key={`${deal.program}-${deal.from}-${deal.to}-${deal.date}-${index}`}
-    deal={deal}
-    index={index}
-    expandedDeals={expandedDeals}
-    toggleExpandedDeal={toggleExpandedDeal}
-    buildReturnPreview={buildReturnPreview}
-    returnDate={returnDate}
-    tripType={tripType}
-    getCentsPerMile={getCentsPerMile}
-    getDealLabel={getDealLabel}
-    getDealStyle={getDealStyle}
-    getRecommendation={getRecommendation}
-    getRankedTransferOptions={getRankedTransferOptions}
-    getDealTotals={getDealTotals}
-    paidTravelers={paidTravelers}
-    saveTrip={saveTrip}
-  />
-);
-
+export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <p className="text-sm font-semibold text-slate-500">
-            Award travel search
-          </p>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="max-w-6xl mx-auto px-6 py-8">
+        <nav className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold">Vantara</p>
+            <p className="text-xs text-slate-400">Private beta</p>
+          </div>
 
-          <h1 className="text-4xl font-bold text-slate-900">
-            Vantara
-          </h1>
+          <Link
+            href="/app"
+            className="rounded-full bg-white text-slate-950 px-5 py-2 text-sm font-semibold hover:bg-slate-200"
+          >
+            Open app
+          </Link>
+        </nav>
 
-          <p className="text-slate-600 mt-2">
-            Find smarter ways to book flights using transferable credit card points.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center py-20">
+          <div>
+            <div className="inline-flex rounded-full border border-purple-400/40 bg-purple-500/10 px-4 py-2 text-sm text-purple-200 mb-6">
+              Award search built around your points wallet
+            </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-2 mb-6 grid grid-cols-2 md:grid-cols-5 gap-2">
-          {(["Search", "Results", "Wallet", "Saved", "Data"] as View[]).map(
-            (item) => (
-              <button
-                key={item}
-                onClick={() => setView(item)}
-                className={`rounded-xl p-3 text-sm font-semibold ${
-                  view === item
-                    ? "bg-slate-900 text-white"
-                    : "hover:bg-slate-100 text-slate-700"
-                }`}
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+              Find the smartest way to book flights with points.
+            </h1>
+
+            <p className="text-lg text-slate-300 mt-6 leading-8">
+              Vantara helps travelers compare real award availability, transfer
+              partners, taxes, seat counts, itinerary details, and booking
+              strategies across transferable credit card ecosystems.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <Link
+                href="/app"
+                className="rounded-xl bg-purple-600 px-6 py-4 text-center font-semibold hover:bg-purple-700"
               >
-                {item}
-              </button>
-            )
-          )}
+                Try the beta app
+              </Link>
+
+              <a
+                href="#waitlist"
+                className="rounded-xl border border-slate-600 px-6 py-4 text-center font-semibold hover:bg-slate-900"
+              >
+                Join beta waitlist
+              </a>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-4">
+              Private beta: award availability should always be confirmed before
+              transferring points.
+            </p>
+          </div>
+
+          <div className="bg-white/10 border border-white/10 rounded-3xl p-5 shadow-2xl">
+            <div className="bg-white text-slate-900 rounded-2xl p-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-bold text-xl">JFK → LHR</p>
+                  <p className="text-sm text-slate-500">
+                    Business • Real itinerary • 2 seats left
+                  </p>
+                </div>
+
+                <span className="bg-green-100 text-green-800 rounded-full px-3 py-1 text-xs font-semibold">
+                  Real award
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mt-5">
+                <div className="bg-purple-50 rounded-xl p-3">
+                  <p className="text-xs text-purple-700">Points</p>
+                  <p className="font-bold text-purple-900">57,500</p>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-3">
+                  <p className="text-xs text-slate-500">Taxes</p>
+                  <p className="font-bold">$5.60</p>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-3">
+                  <p className="text-xs text-slate-500">Cash</p>
+                  <p className="font-bold text-slate-500">N/A</p>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 mt-5">
+                <p className="font-semibold text-purple-900">
+                  Best booking strategy
+                </p>
+                <p className="text-sm text-purple-800 mt-1">
+                  Transfer Chase points → United MileagePlus®
+                </p>
+              </div>
+
+              <div className="border-t border-slate-200 mt-5 pt-4 text-sm text-slate-600">
+                <p>UA 934 • Boeing 767-300 • 7h 10m</p>
+                <p className="mt-1">Availability may change before booking.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {view === "Search" && (
-  <SearchScreen
-    tripType={tripType}
-    setTripType={setTripType}
-    from={from}
-    setFrom={setFrom}
-    to={to}
-    setTo={setTo}
-    departureDate={departureDate}
-    setDepartureDate={setDepartureDate}
-    returnDate={returnDate}
-    setReturnDate={setReturnDate}
-    cabin={cabin}
-    setCabin={setCabin}
-    adults={adults}
-    setAdults={setAdults}
-    children={children}
-    setChildren={setChildren}
-    infantsInSeat={infantsInSeat}
-    setInfantsInSeat={setInfantsInSeat}
-    infantsOnLap={infantsOnLap}
-    setInfantsOnLap={setInfantsOnLap}
-    flexibleDates={flexibleDates}
-    setFlexibleDates={setFlexibleDates}
-    includeNearbyAirports={includeNearbyAirports}
-    setIncludeNearbyAirports={setIncludeNearbyAirports}
-    applyTransferBonuses={applyTransferBonuses}
-    setApplyTransferBonuses={setApplyTransferBonuses}
-    isSearching={isSearching}
-    handleSearch={handleSearch}
-    selectedCards={selectedCards}
-    pointBalances={pointBalances}
-    onEditWallet={() => setView("Wallet")}
-  />
-)}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-16">
+          {[
+            {
+              title: "Real award data",
+              body: "Use cached award availability, itinerary details, taxes, and seat counts when available.",
+            },
+            {
+              title: "Wallet-aware strategy",
+              body: "Prioritize options based on your transferable points ecosystems and balances.",
+            },
+            {
+              title: "Cleaner decisions",
+              body: "See which program to book with, what to transfer, and what still needs confirmation.",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="rounded-2xl border border-white/10 bg-white/5 p-5"
+            >
+              <p className="font-bold text-lg">{item.title}</p>
+              <p className="text-sm text-slate-300 mt-2 leading-6">
+                {item.body}
+              </p>
+            </div>
+          ))}
+        </section>
 
-        {view === "Wallet" && (
-  <WalletScreen
-    selectedCards={selectedCards}
-    pointBalances={pointBalances}
-    expandedCardDatabases={expandedCardDatabases}
-    onToggleCard={toggleCard}
-    onToggleCardDatabase={toggleCardDatabase}
-    onUpdatePointBalance={updatePointBalance}
-    onSaveProfile={saveProfile}
-    onBackToSearch={() => setView("Search")}
-  />
-)}
+        <section
+          id="waitlist"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start border-t border-white/10 py-16"
+        >
+          <div>
+            <p className="text-sm text-purple-300 font-semibold">
+              Join the private beta
+            </p>
 
+            <h2 className="text-3xl md:text-4xl font-bold mt-3">
+              Help shape the points search engine built for real travelers.
+            </h2>
 
+            <p className="text-slate-300 mt-4 leading-7">
+              Beta testers will help validate routes, booking strategies,
+              wallet recommendations, and which features should come next.
+            </p>
 
-{view === "Results" && (
-  <ResultsScreen
-    paidTravelers={paidTravelers}
-    tripType={tripType}
-    sortMode={sortMode}
-    setSortMode={setSortMode}
-    nonstopOnly={nonstopOnly}
-    setNonstopOnly={setNonstopOnly}
-    isSearching={isSearching}
-    hasRealResults={hasRealResults}
-    hasOnlyPlaceholderResults={hasOnlyPlaceholderResults}
-    displayedResults={displayedResults}
-    renderResultCard={renderResultCard}
-    onEditSearch={() => setView("Search")}
-  />
-)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                <p className="font-semibold">Best for</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Travelers with Amex, Chase, Capital One, Bilt, Citi, or Wells
+                  Fargo points.
+                </p>
+              </div>
 
-        {view === "Saved" && (
-  <SavedTrips
-    savedTrips={savedTrips}
-    onRemoveSavedTrip={removeSavedTrip}
-  />
-)}
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+                <p className="font-semibold">Beta focus</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Award availability, transfer logic, result trust, and booking
+                  strategy clarity.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        {view === "Data" && <DataNotes />}
-      </div>
+          <form
+  action="mailto:hello@vantara.app?subject=Vantara Beta Request"
+  method="post"
+  encType="text/plain"
+  className="rounded-3xl bg-white text-slate-900 p-6 shadow-2xl"
+>
+            <p className="font-bold text-xl">Request beta access</p>
+
+            <p className="text-sm text-slate-500 mt-1">
+              This temporary beta form opens your email app. A database-backed
+              waitlist can be added next.
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Email
+                </label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  className="mt-2 w-full border border-slate-300 rounded-xl p-3 text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Home airport
+                </label>
+                <input
+                  name="homeAirport"
+                  type="text"
+                  placeholder="JFK, LAX, ATL..."
+                  className="mt-2 w-full border border-slate-300 rounded-xl p-3 text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Main points ecosystem
+                </label>
+                <select
+                  name="pointsEcosystem"
+                  className="mt-2 w-full border border-slate-300 rounded-xl p-3 bg-white text-slate-900"
+                >
+                  <option>Amex</option>
+                  <option>Chase</option>
+                  <option>Capital One</option>
+                  <option>Bilt</option>
+                  <option>Citi</option>
+                  <option>Wells Fargo</option>
+                  <option>Multiple ecosystems</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-purple-700 text-white p-4 font-semibold hover:bg-purple-800"
+              >
+                Join beta waitlist
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <footer className="border-t border-white/10 py-8 text-sm text-slate-500">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <p>© 2026 Vantara. Private beta.</p>
+            <p>
+              Vantara is not affiliated with airlines, banks, or loyalty
+              programs. Award availability can change before booking.
+            </p>
+          </div>
+        </footer>
+      </section>
     </main>
   );
 }
-
-

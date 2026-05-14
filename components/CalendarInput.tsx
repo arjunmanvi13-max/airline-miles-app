@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function CalendarInput({
   label,
@@ -12,10 +12,37 @@ export default function CalendarInput({
   onChange: (value: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   const monthName = visibleMonth.toLocaleString("default", {
     month: "long",
@@ -57,15 +84,15 @@ export default function CalendarInput({
     : "";
 
   return (
-    <div className="relative">
+    <div ref={wrapperRef} className="relative">
       <label className="block text-sm font-semibold text-slate-700 mb-2">
         {label}
       </label>
 
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="border border-slate-300 p-3 rounded-xl w-full text-left bg-white"
+        onClick={() => setIsOpen((current) => !current)}
+        className="border border-slate-300 p-3 rounded-xl w-full text-left bg-white text-slate-900 hover:border-slate-400"
       >
         {displayValue || `Select ${label.toLowerCase()}`}
       </button>
@@ -84,7 +111,7 @@ export default function CalendarInput({
                   )
                 )
               }
-              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold"
+              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold text-slate-800 hover:bg-slate-200"
             >
               ‹
             </button>
@@ -102,7 +129,7 @@ export default function CalendarInput({
                   )
                 )
               }
-              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold"
+              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold text-slate-800 hover:bg-slate-200"
             >
               ›
             </button>
@@ -126,10 +153,10 @@ export default function CalendarInput({
                     onChange(formatDate(day));
                     setIsOpen(false);
                   }}
-                  className={`rounded-lg p-2 text-sm hover:bg-slate-100 ${
+                  className={`rounded-lg p-2 text-sm ${
                     value === formatDate(day)
-                      ? "bg-slate-900 text-white hover:bg-slate-900"
-                      : "text-slate-800"
+                      ? "bg-purple-700 text-white hover:bg-purple-800"
+                      : "text-slate-800 hover:bg-slate-100"
                   }`}
                 >
                   {day}
