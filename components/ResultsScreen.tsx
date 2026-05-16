@@ -34,6 +34,22 @@ export default function ResultsScreen({
   renderResultCard: (deal: FlightDealWithSource, index: number) => React.ReactNode;
   onEditSearch: () => void;
 }) {
+  const firstResult = displayedResults[0];
+
+  const feedbackHref = firstResult
+    ? `mailto:vantara747@gmail.com?subject=Vantara Beta Feedback&body=${encodeURIComponent(
+        `Route tested: ${firstResult.from} → ${firstResult.to}
+Date: ${firstResult.date}
+Cabin: ${firstResult.cabin}
+
+What felt useful?
+
+What was confusing?
+
+What should be improved?`
+      )}`
+    : "mailto:vantara747@gmail.com?subject=Vantara Beta Feedback";
+
   return (
     <div> <div className="transition-all duration-300"></div>
       <div className="bg-white shadow-xl rounded-3xl p-6 border border-slate-200 mb-6">
@@ -168,7 +184,26 @@ export default function ResultsScreen({
 )}
 
       {!isSearching &&
-        displayedResults.map((deal, index) => renderResultCard(deal, index))}
+  displayedResults.map((deal, index) => renderResultCard(deal, index))}
+
+{!isSearching && displayedResults.length > 0 && (
+  <div className="bg-white border border-slate-200 rounded-2xl p-5 mt-6 text-slate-700">
+    <p className="font-semibold text-slate-900">
+      Was anything confusing or inaccurate?
+    </p>
+
+    <p className="text-sm text-slate-500 mt-1">
+      Your feedback helps improve Vantara’s routing, transfer logic, and result clarity.
+    </p>
+
+    <a
+      href={feedbackHref}
+      className="mt-4 inline-block rounded-xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-800"
+    >
+      Send feedback on these results
+    </a>
+  </div>
+)}
     </div>
   );
 }

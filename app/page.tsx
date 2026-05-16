@@ -43,11 +43,11 @@ export default function LandingPage() {
               </Link>
 
               <a
-                href="#waitlist"
-                className="rounded-xl border border-slate-600 px-6 py-4 text-center font-semibold hover:bg-slate-900"
-              >
-                Join beta waitlist
-              </a>
+  href="#feedback"
+  className="rounded-xl border border-slate-600 px-6 py-4 text-center font-semibold hover:bg-slate-900"
+>
+  Leave feedback
+</a>
             </div>
 
             <p className="text-xs text-slate-500 mt-4">
@@ -132,22 +132,59 @@ export default function LandingPage() {
           ))}
         </section>
 
+        <section className="pb-16">
+  <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
+    <div className="max-w-3xl">
+      <p className="text-sm font-semibold text-purple-300">
+        What should I test?
+      </p>
+
+      <h2 className="text-3xl font-bold mt-3">
+        Help stress-test real award search workflows.
+      </h2>
+
+      <p className="text-slate-300 mt-4 leading-7">
+        The current beta is focused on helping travelers evaluate transferable
+        points redemptions more confidently. Try routes you would actually book
+        and look for anything confusing, inaccurate, or missing.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+      {[
+        "Compare a US domestic route you already know well",
+        "Try an international redemption with transfer partners",
+        "Test different card ecosystems and balances",
+        "Compare multiple booking paths for the same trip",
+        "Look for confusing terminology or unclear recommendations",
+        "Check whether the booking strategy feels trustworthy",
+      ].map((item) => (
+        <div
+          key={item}
+          className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-slate-200"
+        >
+          {item}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
         <section
-          id="waitlist"
+          id="feedback"
           className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start border-t border-white/10 py-16"
         >
           <div>
             <p className="text-sm text-purple-300 font-semibold">
-              Join the private beta
+              Leave beta feedback
             </p>
 
             <h2 className="text-3xl md:text-4xl font-bold mt-3">
-              Help shape the points search engine built for real travelers.
+              Help improve Vantara before the next beta build.
             </h2>
 
             <p className="text-slate-300 mt-4 leading-7">
-              Beta testers will help validate routes, booking strategies,
-              wallet recommendations, and which features should come next.
+              Try the app, search a real route, and share what felt useful, confusing, or missing.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
@@ -170,16 +207,16 @@ export default function LandingPage() {
           </div>
 
           <form
-  action="mailto:vantara747@gmail.com?subject=Vantara Beta Request"
+  action="mailto:vantara747@gmail.com?subject=Vantara Beta Feedback"
   method="post"
   encType="text/plain"
   className="rounded-3xl bg-white text-slate-900 p-6 shadow-2xl"
 >
-            <p className="font-bold text-xl">Request beta access</p>
+            <p className="font-bold text-xl">Share feedback</p>
 
             <p className="text-sm text-slate-500 mt-1">
-              This temporary beta form opens your email app. A database-backed
-              waitlist can be added next.
+              This temporary feedback form opens your email app with your notes.
+A database-backed feedback form can be added next.
             </p>
 
             <div className="mt-5 space-y-4">
@@ -198,12 +235,12 @@ export default function LandingPage() {
 
               <div>
                 <label className="text-sm font-semibold text-slate-700">
-                  Home airport
+                  Feedback/Notes
                 </label>
                 <input
-                  name="Home airport"
+                  name="Feedback Notes"
                   type="text"
-                  placeholder="JFK, LAX, ATL..."
+                  placeholder="What can we improve?"
                   className="mt-2 w-full border border-slate-300 rounded-xl p-3 text-slate-900"
                 />
               </div>
@@ -230,7 +267,7 @@ export default function LandingPage() {
                 type="submit"
                 className="w-full rounded-xl bg-purple-700 text-white p-4 font-semibold hover:bg-purple-800"
               >
-                Join beta waitlist
+                Send feedback
               </button>
             </div>
           </form>
