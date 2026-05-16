@@ -43,7 +43,9 @@ export default function LandingPage() {
               </Link>
 
               <a
-  href="#feedback"
+  href="https://docs.google.com/forms/d/e/1FAIpQLSfevx7WkSwVD8wqhgji3rGlcaUeN-s5ha9ksNBt5QhRmmc-Gg/viewform?usp=dialog"
+  target="_blank"
+  rel="noopener noreferrer"
   className="rounded-xl border border-slate-600 px-6 py-4 text-center font-semibold hover:bg-slate-900"
 >
   Leave feedback
@@ -171,107 +173,79 @@ export default function LandingPage() {
 </section>
 
         <section
-          id="feedback"
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start border-t border-white/10 py-16"
-        >
-          <div>
-            <p className="text-sm text-purple-300 font-semibold">
-              Leave beta feedback
-            </p>
-
-            <h2 className="text-3xl md:text-4xl font-bold mt-3">
-              Help improve Vantara before the next beta build.
-            </h2>
-
-            <p className="text-slate-300 mt-4 leading-7">
-              Try the app, search a real route, and share what felt useful, confusing, or missing.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-                <p className="font-semibold">Best for</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Travelers with Amex, Chase, Capital One, Bilt, Citi, or Wells
-                  Fargo points.
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-                <p className="font-semibold">Beta focus</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Award availability, transfer logic, result trust, and booking
-                  strategy clarity.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <form
-  action="mailto:vantara747@gmail.com?subject=Vantara Beta Feedback"
-  method="post"
-  encType="text/plain"
-  className="rounded-3xl bg-white text-slate-900 p-6 shadow-2xl"
+         
+  id="feedback"
+  className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start border-t border-white/10 py-16"
 >
-            <p className="font-bold text-xl">Share feedback</p>
+  <div>
+    <p className="text-sm text-purple-300 font-semibold">
+      Beta feedback
+    </p>
 
-            <p className="text-sm text-slate-500 mt-1">
-              This temporary feedback form opens your email app with your notes.
-A database-backed feedback form can be added next.
-            </p>
+    <h2 className="text-3xl md:text-4xl font-bold mt-3">
+      Help improve Vantara with real-world testing.
+    </h2>
 
-            <div className="mt-5 space-y-4">
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Email
-                </label>
-                <input
-                  name="Email"
-                  type="email"
-                  required
-                  placeholder="you@example.com"
-                  className="mt-2 w-full border border-slate-300 rounded-xl p-3 text-slate-900"
-                />
-              </div>
+    <p className="text-slate-300 mt-4 leading-7">
+      The beta is focused on award search clarity, transfer strategy confidence,
+      wallet-aware recommendations, and real itinerary usability.
+    </p>
 
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Feedback/Notes
-                </label>
-                <input
-                  name="Feedback Notes"
-                  type="text"
-                  placeholder="What can we improve?"
-                  className="mt-2 w-full border border-slate-300 rounded-xl p-3 text-slate-900"
-                />
-              </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p className="font-semibold">Best testers</p>
+        <p className="text-sm text-slate-400 mt-1">
+          Travelers using Amex, Chase, Capital One, Bilt, Citi, or Wells Fargo points.
+        </p>
+      </div>
 
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Main points ecosystem
-                </label>
-                <select
-                  name="Main points ecosystem"
-                  className="mt-2 w-full border border-slate-300 rounded-xl p-3 bg-white text-slate-900"
-                >
-                  <option>Amex</option>
-                  <option>Chase</option>
-                  <option>Capital One</option>
-                  <option>Bilt</option>
-                  <option>Citi</option>
-                  <option>Wells Fargo</option>
-                  <option>Multiple ecosystems</option>
-                </select>
-              </div>
+      <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
+        <p className="font-semibold">Most valuable feedback</p>
+        <p className="text-sm text-slate-400 mt-1">
+          Confusing booking paths, missing routes, unclear recommendations,
+          and transfer strategy issues.
+        </p>
+      </div>
+    </div>
+  </div>
 
-              <button
-                type="submit"
-                className="w-full rounded-xl bg-purple-700 text-white p-4 font-semibold hover:bg-purple-800"
-              >
-                Send feedback
-              </button>
-            </div>
-          </form>
-        </section>
+  <div className="rounded-3xl bg-white text-slate-900 p-6 shadow-2xl">
+    <p className="font-bold text-2xl">
+      Share feedback
+    </p>
+
+    <p className="text-sm text-slate-500 mt-2 leading-6">
+      The beta feedback form takes about 2 minutes and helps shape future
+      versions of Vantara.
+    </p>
+
+    <div className="mt-6 space-y-3">
+      {[
+        "Report confusing results",
+        "Suggest missing features",
+        "Share award search frustrations",
+        "Test wallet recommendations",
+        "Help improve booking confidence",
+      ].map((item) => (
+        <div
+          key={item}
+          className="rounded-xl border border-slate-200 p-3 text-sm text-slate-700"
+        >
+          {item}
+        </div>
+      ))}
+    </div>
+
+    <a
+      href="https://docs.google.com/forms/d/e/1FAIpQLSfevx7WkSwVD8wqhgji3rGlcaUeN-s5ha9ksNBt5QhRmmc-Gg/viewform?usp=dialog"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-6 block w-full rounded-xl bg-purple-700 text-white p-4 text-center font-semibold hover:bg-purple-800"
+    >
+      Open feedback form
+    </a>
+  </div>
+</section>
 
         <footer className="border-t border-white/10 py-8 text-sm text-slate-500">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">

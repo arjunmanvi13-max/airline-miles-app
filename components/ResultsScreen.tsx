@@ -7,6 +7,9 @@ type SortMode =
   | "Lowest cash price"
   | "Nonstop first";
 
+  const feedbackFormUrl =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfevx7WkSwVD8wqhgji3rGlcaUeN-s5ha9ksNBt5QhRmmc-Gg/viewform?usp=dialog";
+
 export default function ResultsScreen({
   paidTravelers,
   tripType,
@@ -34,21 +37,7 @@ export default function ResultsScreen({
   renderResultCard: (deal: FlightDealWithSource, index: number) => React.ReactNode;
   onEditSearch: () => void;
 }) {
-  const firstResult = displayedResults[0];
 
-  const feedbackHref = firstResult
-    ? `mailto:vantara747@gmail.com?subject=Vantara Beta Feedback&body=${encodeURIComponent(
-        `Route tested: ${firstResult.from} → ${firstResult.to}
-Date: ${firstResult.date}
-Cabin: ${firstResult.cabin}
-
-What felt useful?
-
-What was confusing?
-
-What should be improved?`
-      )}`
-    : "mailto:vantara747@gmail.com?subject=Vantara Beta Feedback";
 
   return (
     <div> <div className="transition-all duration-300"></div>
@@ -197,11 +186,13 @@ What should be improved?`
     </p>
 
     <a
-      href={feedbackHref}
-      className="mt-4 inline-block rounded-xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-800"
-    >
-      Send feedback on these results
-    </a>
+  href={feedbackFormUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mt-4 inline-block rounded-xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-800"
+>
+  Send feedback on these results
+</a>
   </div>
 )}
     </div>

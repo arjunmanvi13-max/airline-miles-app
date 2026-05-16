@@ -214,14 +214,32 @@ export default function SearchScreen({
           Apply prototype transfer bonuses when available
         </label>
 
-        <div className="sticky bottom-0 -mx-6 px-6 bg-white/95 backdrop-blur pt-4 pb-3 mt-6 border-t border-slate-200 md:static md:mx-0 md:px-0 md:border-0 md:bg-transparent md:backdrop-blur-0 md:p-0">
-  <button
-    onClick={handleSearch}
-    disabled={isSearching}
-    className="w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
+        <div className="sticky bottom-0 bg-white pt-4 pb-2 mt-6 border-t border-slate-200 md:static md:border-0 md:p-0">
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <button
+      onClick={handleSearch}
+      disabled={isSearching}
+      className="sm:col-span-2 bg-slate-900 hover:bg-slate-700 text-white font-semibold p-4 rounded-xl disabled:opacity-60"
+    >
+      {isSearching ? "Searching..." : "Search Best Miles Deals"}
+    </button>
+
+    <a
+      href="/"
+      className="border border-slate-300 rounded-xl p-4 text-center font-semibold hover:bg-slate-50"
+    >
+      Home
+    </a>
+  </div>
+
+  <a
+    href="https://docs.google.com/forms/d/e/1FAIpQLSfevx7WkSwVD8wqhgji3rGlcaUeN-s5ha9ksNBt5QhRmmc-Gg/viewform?usp=dialog"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mt-3 block w-full border border-purple-300 bg-purple-50 text-purple-900 rounded-xl p-4 text-center font-semibold hover:bg-purple-100"
   >
-    {isSearching ? "Searching award space..." : "Search award options"}
-  </button>
+    Leave feedback about the beta
+  </a>
 </div>
       </div>
 
