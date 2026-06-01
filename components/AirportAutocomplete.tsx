@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { airports } from "@/app/data";
+import {
+  commercialAirports,
+  getAirportSearchPriority,
+} from "@/app/airportUtils";
 
 export default function AirportAutocomplete({
   label,
@@ -16,7 +19,9 @@ export default function AirportAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const selected = airports.find((airport) => airport.code === selectedAirport);
+  const selected = commercialAirports.find(
+    (airport) => airport.code === selectedAirport
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,7 +50,7 @@ export default function AirportAutocomplete({
     };
   }, []);
 
-  const filteredAirports = airports
+  const filteredAirports = commercialAirports
     .filter((airport) => {
       const search = query.trim().toLowerCase();
 
@@ -61,6 +66,25 @@ export default function AirportAutocomplete({
 
       return searchableText.includes(search);
     })
+    .sort((a, b) => {
+      const search = query.trim().toLowerCase();
+
+      const aCodeMatch = a.code.toLowerCase() === search;
+      const bCodeMatch = b.code.toLowerCase() === search;
+
+      if (aCodeMatch && !bCodeMatch) return -1;
+      if (!aCodeMatch && bCodeMatch) return 1;
+
+      const aCityMatch =
+        "municipality" in a && a.municipality.toLowerCase() === search;
+      const bCityMatch =
+        "municipality" in b && b.municipality.toLowerCase() === search;
+
+      if (aCityMatch && !bCityMatch) return -1;
+      if (!aCityMatch && bCityMatch) return 1;
+
+      return getAirportSearchPriority(b) - getAirportSearchPriority(a);
+    })
     .slice(0, 8);
 
   const displayValue = isOpen
@@ -71,28 +95,32 @@ export default function AirportAutocomplete({
 
   return (
     <div ref={wrapperRef} className="relative">
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
+      <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">
         {label}
       </label>
 
       <input
-        value={displayValue}
-        onFocus={() => {
-          setIsOpen(true);
-          setQuery("");
-        }}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setIsOpen(true);
-        }}
-        placeholder={`Search ${label.toLowerCase()} airport`}
-        className="border border-slate-300 p-3 rounded-xl w-full bg-white text-slate-900 placeholder:text-slate-400 hover:border-slate-400"
-      />
+  value={displayValue}
+  onFocus={() => {
+    setIsOpen(true);
+    setQuery("");
+  }}
+  onChange={(e) => {
+    setQuery(e.target.value);
+    setIsOpen(true);
+  }}
+  placeholder={`Search ${label.toLowerCase()} airport`}
+  style={{
+    backgroundColor: "#111111",
+    color: "white",
+  }}
+  className="w-full border border-white/10 px-4 py-4 text-sm placeholder:text-neutral-500 outline-none transition-all hover:border-white/20 focus:border-purple-300"
+/>
 
       {isOpen && (
-        <div className="absolute z-30 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-72 overflow-y-auto">
+        <div className="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto border border-white/10 !bg-[#161616] shadow-2xl">
           {filteredAirports.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-slate-500">
+            <div className="px-4 py-4 text-sm text-neutral-400">
               No matching airports found.
             </div>
           ) : (
@@ -105,13 +133,13 @@ export default function AirportAutocomplete({
                   setQuery("");
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-slate-100 border-b border-slate-100 last:border-b-0"
+                className="w-full border-b border-white/5 px-4 py-4 text-left transition-colors last:border-b-0 hover:bg-white/5"
               >
-                <p className="font-semibold text-slate-900">
+                <p className="font-semibold text-white">
                   {airport.code} — {airport.name}
                 </p>
 
-                <p className="text-xs text-slate-500">
+                <p className="mt-1 text-xs text-neutral-400">
                   {"municipality" in airport && airport.municipality
                     ? `${airport.municipality}, ${airport.country}`
                     : airport.region}

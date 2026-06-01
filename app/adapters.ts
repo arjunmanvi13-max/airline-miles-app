@@ -1,4 +1,5 @@
 import { FlightDeal, generateRealisticDeals } from "./logic";
+import { getNearbyCommercialAirportCodes } from "./airportUtils";
 
 export type SearchFlightDealsInput = {
   from: string;
@@ -13,7 +14,7 @@ export type SearchFlightDealsInput = {
 };
 
 export type FlightDealWithSource = FlightDeal & {
-  dataSource: "seats_aero_cached" | "placeholder";
+  dataSource: "seats_aero_cached" | "placeholder" | "no_cached_results";
   dataNote: string;
   routeConfidence: "cached_availability_only" | "simulated" | "real_itinerary";
   seatsRemaining?: number;
@@ -168,29 +169,52 @@ export const searchFlightDeals = async (
   });
 
   try {
+    const originCodes = input.includeNearbyAirports
+  ? getNearbyCommercialAirportCodes(input.from, 250, 5)
+  : [input.from];
+
+const destinationCodes = input.includeNearbyAirports
+  ? getNearbyCommercialAirportCodes(input.to, 250, 5)
+  : [input.to];
+
+const searchPairs = originCodes.flatMap((origin) =>
+  destinationCodes.map((destination) => ({
+    origin,
+    destination,
+  }))
+);
+
+const searchResponses = await Promise.all(
+  searchPairs.map(async (pair) => {
     const params = new URLSearchParams({
-  origin_airport: input.from,
-  destination_airport: input.to,
-  start_date: input.departureDate,
-  end_date: input.departureDate,
-  take: "100",
-  order_by: "lowest_mileage",
-  cabins: getSeatsAeroCabin(input.cabin),
-  include_filtered: "true",
-  include_trips: "true",
-});
+      origin_airport: pair.origin,
+      destination_airport: pair.destination,
+      start_date: input.departureDate,
+      end_date: input.departureDate,
+      take: "100",
+      order_by: "lowest_mileage",
+      cabins: getSeatsAeroCabin(input.cabin),
+      include_filtered: "true",
+      include_trips: "true",
+    });
 
     const response = await fetch(`/api/seats?${params.toString()}`);
 
     if (!response.ok) {
-  const errorData = await response.json().catch(() => null);
+      return [];
+    }
 
-  throw new Error(
-    errorData?.error || "Seats.aero request failed"
-  );
-}
+    const json = await response.json();
 
-const json = await response.json();
+    return (json.data || []).map((item: any) => ({
+      ...item,
+      VantaraSearchOrigin: pair.origin,
+      VantaraSearchDestination: pair.destination,
+    }));
+  })
+);
+
+const allSearchResults = searchResponses.flat();
 
 
 
@@ -198,7 +222,7 @@ const json = await response.json();
 
 const cabinPrefix = getCabinPrefix(input.cabin);
 
-    const validResults = (json.data || [])
+    const validResults = allSearchResults
       .filter((item: any) => {
         const available = Boolean(item[`${cabinPrefix}Available`]);
         const miles = getNumericField(item, `${cabinPrefix}MileageCost`);
@@ -237,14 +261,30 @@ const cabinPrefix = getCabinPrefix(input.cabin);
     );
 
     if (uniqueResults.length === 0) {
-      return fallbackDeals.map((deal) => ({
-  ...deal,
-  dataSource: "placeholder",
-  routeConfidence: "simulated",
-  dataNote:
-    "No usable cached Seats.aero award results were found for this exact search, so this result uses simulated fallback data.",
-}));
-    }
+  return [
+    {
+      ...fallbackDeals[0],
+      airline: "No cached award availability found",
+      miles: 0,
+      taxes: 0,
+      estimatedCashPrice: 0,
+      program: "Try different dates or airports",
+      tag: "No cached results",
+      score: 0,
+      stops: "No cached results",
+      departureTime: "",
+      arrivalTime: "",
+      duration: "",
+      aircraft: "",
+      stopCity: undefined,
+      segments: [],
+      dataSource: "no_cached_results" as const,
+      routeConfidence: "simulated" as const,
+      dataNote:
+        "No cached award availability was found for this exact route or nearby airport expansion. Try flexible dates, a major hub, or a different cabin.",
+    },
+  ];
+}
 
     const enrichedResults = await Promise.all(
   uniqueResults.map(async (item: any, index: number) => {
@@ -394,13 +434,28 @@ return enrichedResults;
   } catch (error) {
     console.error(error);
 
-    return fallbackDeals.map((deal) => ({
-  ...deal,
-  dataSource: "placeholder",
-  routeConfidence: "simulated",
-  dataNote:
-    "Seats.aero data could not be loaded, so this result uses simulated fallback data.",
-
-    }));
+    return [
+  {
+    ...fallbackDeals[0],
+    airline: "Search temporarily unavailable",
+    miles: 0,
+    taxes: 0,
+    estimatedCashPrice: 0,
+    program: "Try again shortly",
+    tag: "Search unavailable",
+    score: 0,
+    stops: "Search unavailable",
+    departureTime: "",
+    arrivalTime: "",
+    duration: "",
+    aircraft: "",
+    stopCity: undefined,
+    segments: [],
+    dataSource: "no_cached_results" as const,
+    routeConfidence: "simulated" as const,
+    dataNote:
+      "Award data could not be loaded right now. Please try again shortly.",
+  },
+];
   }
 };

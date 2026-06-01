@@ -5,10 +5,12 @@ import { useEffect, useRef, useState } from "react";
 export default function CalendarInput({
   label,
   value,
+  comparisonDate,
   onChange,
 }: {
   label: string;
   value: string;
+  comparisonDate?: string;
   onChange: (value: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,6 +74,7 @@ export default function CalendarInput({
   const formatDate = (day: number) => {
     const month = String(visibleMonth.getMonth() + 1).padStart(2, "0");
     const date = String(day).padStart(2, "0");
+
     return `${visibleMonth.getFullYear()}-${month}-${date}`;
   };
 
@@ -85,21 +88,21 @@ export default function CalendarInput({
 
   return (
     <div ref={wrapperRef} className="relative">
-      <label className="block text-sm font-semibold text-slate-700 mb-2">
+      <label className="mb-2 block text-xs uppercase tracking-[0.22em] text-slate-500">
         {label}
       </label>
 
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="border border-slate-300 p-3 rounded-xl w-full text-left bg-white text-slate-900 hover:border-slate-400"
+        className="w-full border border-white/10 bg-[#111111] px-4 py-4 text-left text-sm text-white transition-all hover:border-white/20 focus:border-purple-300"
       >
         {displayValue || `Select ${label.toLowerCase()}`}
       </button>
 
       {isOpen && (
-        <div className="absolute z-40 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-4 w-full md:w-80">
-          <div className="flex items-center justify-between mb-4">
+        <div className="absolute z-40 mt-2 w-full border border-white/10 bg-[#161616] p-4 shadow-2xl md:w-80">
+          <div className="mb-4 flex items-center justify-between">
             <button
               type="button"
               onClick={() =>
@@ -111,12 +114,12 @@ export default function CalendarInput({
                   )
                 )
               }
-              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold text-slate-800 hover:bg-slate-200"
+              className="flex h-9 w-9 items-center justify-center bg-white/5 text-white transition-colors hover:bg-white/10"
             >
               ‹
             </button>
 
-            <p className="font-bold text-slate-900">{monthName}</p>
+            <p className="font-semibold text-white">{monthName}</p>
 
             <button
               type="button"
@@ -129,40 +132,50 @@ export default function CalendarInput({
                   )
                 )
               }
-              className="px-3 py-1 rounded-lg bg-slate-100 font-semibold text-slate-800 hover:bg-slate-200"
+              className="flex h-9 w-9 items-center justify-center bg-white/5 text-white transition-colors hover:bg-white/10"
             >
               ›
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 mb-2">
+          <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs text-neutral-500">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day}>{day}</div>
             ))}
           </div>
 
           <div className="grid grid-cols-7 gap-1">
-            {days.map((day, index) =>
-              day === null ? (
+            {days.map((day, index) => {
+              const dateValue = day ? formatDate(day) : "";
+              const isSelected = value === dateValue;
+              const isComparisonDate = comparisonDate === dateValue;
+
+              return day === null ? (
                 <div key={`empty-${index}`} />
               ) : (
                 <button
                   key={day}
                   type="button"
                   onClick={() => {
-                    onChange(formatDate(day));
+                    onChange(dateValue);
                     setIsOpen(false);
                   }}
-                  className={`rounded-lg p-2 text-sm ${
-                    value === formatDate(day)
-                      ? "bg-purple-700 text-white hover:bg-purple-800"
-                      : "text-slate-800 hover:bg-slate-100"
-                  }`}
+                  className="flex h-9 w-9 items-center justify-center text-sm text-neutral-300 transition-colors hover:bg-white/5"
                 >
-                  {day}
+                  <span
+                   className={`flex h-8 w-8 items-center justify-center rounded-full ${
+  isSelected
+    ? "border border-purple-300 bg-purple-500/30 text-white shadow-[0_0_18px_rgba(168,85,247,0.55)]"
+    : isComparisonDate
+    ? "border border-purple-400/70 text-purple-200"
+    : ""
+}`}
+                  >
+                    {day}
+                  </span>
                 </button>
-              )
-            )}
+              );
+            })}
           </div>
         </div>
       )}
