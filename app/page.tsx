@@ -1,5 +1,4 @@
 import Link from "next/link";
-import CalculatorScreen from "@/components/CalculatorScreen";
 
 const feedbackFormUrl =
   "https://docs.google.com/forms/d/e/1FAIpQLSfevx7WkSwVD8wqhgji3rGlcaUeN-s5ha9ksNBt5QhRmmc-Gg/viewform?usp=dialog";
@@ -15,12 +14,9 @@ export default function LandingPage() {
       <section className="relative mx-auto max-w-7xl px-5 py-6 md:px-8">
         <nav className="flex items-center justify-between border-b border-white/10 pb-6">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.45em] text-purple-300">
-              Award travel intelligence
-            </p>
-
-            <p className="mt-3 text-4xl font-serif font-normal tracking-tight text-white">
-              Vantara
+            <p className="text-2xl font-serif tracking-tight">Vantara</p>
+            <p className="mt-1 text-[11px] uppercase tracking-[0.32em] text-purple-300">
+              Award decision intelligence
             </p>
           </div>
 
@@ -28,39 +24,33 @@ export default function LandingPage() {
             href="/app"
             className="border border-purple-300/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-100 transition hover:bg-purple-500/20"
           >
-            Open app
+            Open beta
           </Link>
         </nav>
 
-        <section className="grid grid-cols-1 gap-10 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+        <section className="grid grid-cols-1 items-center gap-12 py-20 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <div className="mb-6 inline-flex border border-white/10 bg-white/[0.04] px-4 py-2 text-xs uppercase tracking-[0.22em] text-slate-400">
-              Private beta
+            <div className="mb-6 inline-flex border border-purple-300/30 bg-purple-500/10 px-4 py-2 text-sm text-purple-200">
+              Upload an award. Know if it is worth booking.
             </div>
 
             <h1 className="max-w-4xl text-5xl font-serif font-normal tracking-tight text-white md:text-7xl">
-              Smarter award travel starts with your wallet.
+              The decision layer for award travel.
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-slate-400 md:text-lg">
-              Vantara helps travelers compare award availability, transferable
-              points strategy, taxes, routing options, and booking confidence
-              across major credit card ecosystems.
+              Vantara helps you analyze award redemptions through your actual
+              points wallet. Upload a screenshot or enter award details manually,
+              then get transfer recommendations, wallet fit, redemption value,
+              and booking guidance.
             </p>
 
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/app"
-                className="border border-purple-300/50 bg-purple-500/15 px-6 py-4 text-center font-semibold text-purple-100 transition hover:bg-purple-500/25"
+                className="bg-white px-6 py-4 text-center font-semibold text-slate-950 transition hover:bg-purple-100"
               >
-                Try award search
-              </Link>
-
-              <Link
-                href="/app"
-                className="border border-white/10 bg-white/[0.04] px-6 py-4 text-center font-semibold text-white transition hover:bg-white/[0.08]"
-              >
-                Use calculator
+                Build wallet & analyze award
               </Link>
 
               <a
@@ -73,95 +63,89 @@ export default function LandingPage() {
               </a>
             </div>
 
-            <p className="mt-4 text-xs leading-6 text-slate-500">
-              Private beta: always confirm award space before transferring
-              points. Point transfers are often irreversible.
+            <p className="mt-4 max-w-xl text-xs leading-6 text-slate-500">
+              Private beta. Always verify award availability before transferring
+              points. Transfers are often irreversible.
             </p>
           </div>
 
           <div className="border border-white/10 bg-[#090B12]/95 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.42)]">
-            <div className="border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-purple-300">
-                    Example strategy
-                  </p>
+            <div className="border border-purple-300/25 bg-purple-500/10 p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-purple-300">
+                Vantara recommendation
+              </p>
 
-                  <p className="mt-3 text-3xl font-serif font-normal text-white">
-                    JFK → LHR
-                  </p>
+              <h2 className="mt-3 text-3xl font-serif font-normal text-white">
+                Book with points
+              </h2>
 
-                  <p className="mt-2 text-sm text-slate-400">
-                    Business • 2 seats • cached award result
-                  </p>
-                </div>
+              <p className="mt-3 text-sm leading-6 text-slate-300">
+                Strong redemption value, enough points in wallet, and a clean
+                transfer path.
+              </p>
+            </div>
 
-                <span className="border border-emerald-300/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
-                  Real award
-                </span>
-              </div>
-
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                <div className="border border-purple-300/25 bg-purple-500/10 p-4">
-                  <p className="text-xs text-purple-200/80">Points</p>
-                  <p className="mt-1 text-xl font-semibold text-white">
-                    57,500
-                  </p>
-                </div>
-
-                <div className="border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-xs text-slate-500">Taxes</p>
-                  <p className="mt-1 text-xl font-semibold text-white">$5.60</p>
-                </div>
-
-                <div className="border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-xs text-slate-500">Cash</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-400">
-                    N/A
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 border border-purple-300/25 bg-purple-500/10 p-4">
-                <p className="font-semibold text-purple-100">
-                  Best booking strategy
-                </p>
-
-                <p className="mt-2 text-sm leading-6 text-purple-100/75">
-                  Transfer Chase points → United MileagePlus® and confirm final
-                  award space before moving points.
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs text-slate-500">Best transfer</p>
+                <p className="mt-2 font-semibold text-white">
+                  Chase → MileagePlus
                 </p>
               </div>
 
-              <div className="mt-5 border-t border-white/10 pt-4 text-sm leading-7 text-slate-400">
-                <p>UA 934 • Boeing 767-300 • 7h 10m</p>
-                <p>Availability may change before booking.</p>
+              <div className="border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs text-slate-500">Wallet fit</p>
+                <p className="mt-2 font-semibold text-white">Excellent</p>
+              </div>
+
+              <div className="border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs text-slate-500">Required</p>
+                <p className="mt-2 font-semibold text-white">37,500 pts</p>
+              </div>
+
+              <div className="border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs text-slate-500">Value</p>
+                <p className="mt-2 font-semibold text-white">2.1¢ / point</p>
+              </div>
+            </div>
+
+            <div className="mt-4 border border-white/10 bg-black/20 p-4">
+              <p className="text-sm font-semibold text-white">
+                What Vantara checks
+              </p>
+
+              <div className="mt-3 space-y-2 text-sm text-slate-400">
+                <p>• Can your wallet book this award?</p>
+                <p>• Which transfer path is most efficient?</p>
+                <p>• Are you short points?</p>
+                <p>• Is the redemption value strong?</p>
+                <p>• Should you book, wait, or pay cash?</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 pb-16 md:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 border-t border-white/10 py-16 md:grid-cols-3">
           {[
             {
-              title: "Search when data exists",
-              body: "Use cached award availability, itinerary details, taxes, and seat counts when available.",
+              title: "Wallet-first analysis",
+              body: "Save your Amex, Chase, Capital One, Bilt, Citi, and Wells Fargo balances so every recommendation is personalized.",
             },
             {
-              title: "Calculate anytime",
-              body: "Already found a flight elsewhere? Use Vantara to evaluate the best transfer path.",
+              title: "Award screenshot intake",
+              body: "Upload a screenshot from an award tool or airline site, then analyze the booking with your actual points wallet.",
             },
             {
-              title: "Book with confidence",
-              body: "See which program to book with, what to transfer, and what still needs confirmation.",
+              title: "Transfer strategy",
+              body: "See where to transfer, how many points you need, whether you are short, and whether a bonus changes the decision.",
             },
           ].map((item) => (
             <div
               key={item.title}
-              className="border border-white/10 bg-white/[0.035] p-5"
+              className="border border-white/10 bg-white/[0.03] p-6"
             >
               <p className="text-lg font-semibold text-white">{item.title}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <p className="mt-3 text-sm leading-7 text-slate-400">
                 {item.body}
               </p>
             </div>
@@ -172,94 +156,81 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
               <p className="text-[11px] uppercase tracking-[0.35em] text-purple-300">
-                What to test
+                How it works
               </p>
 
-              <h2 className="mt-3 text-4xl font-serif font-normal tracking-tight text-white">
-                Help stress-test real award workflows.
+              <h2 className="mt-3 text-4xl font-serif font-normal text-white">
+                From award screenshot to booking decision.
               </h2>
 
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-                The current beta is focused on award search clarity, wallet-aware
-                recommendations, and transfer strategy confidence.
+              <p className="mt-4 text-sm leading-7 text-slate-400">
+                Vantara is being built around the moment after you find award
+                space: deciding whether it is worth booking and how to book it
+                with the points you already have.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3">
               {[
-                "Compare a route you already know well",
-                "Try an international redemption",
-                "Test different card ecosystems",
-                "Enter real point balances",
-                "Look for confusing recommendations",
-                "Check whether the strategy feels trustworthy",
+                {
+                  step: "01",
+                  title: "Build your wallet",
+                  body: "Select your points ecosystems and enter optional balances.",
+                },
+                {
+                  step: "02",
+                  title: "Upload or enter an award",
+                  body: "Add a screenshot or manually enter airline, miles, taxes, cabin, and route.",
+                },
+                {
+                  step: "03",
+                  title: "Get a recommendation",
+                  body: "Vantara checks transfer options, wallet fit, point value, and booking risk.",
+                },
               ].map((item) => (
                 <div
-                  key={item}
-                  className="border border-white/10 bg-white/[0.035] p-4 text-sm text-slate-300"
+                  key={item.step}
+                  className="grid grid-cols-[auto_1fr] gap-4 border border-white/10 bg-white/[0.03] p-5"
                 >
-                  {item}
+                  <div className="text-sm text-purple-300">{item.step}</div>
+                  <div>
+                    <p className="font-semibold text-white">{item.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-400">
+                      {item.body}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section
-          id="feedback"
-          className="grid grid-cols-1 gap-8 py-16 lg:grid-cols-2"
-        >
+        <section className="grid grid-cols-1 gap-8 py-16 lg:grid-cols-2">
           <div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-purple-300">
-              Beta feedback
+              Browser extension direction
             </p>
 
-            <h2 className="mt-3 text-4xl font-serif font-normal tracking-tight text-white">
-              Help improve Vantara with real-world testing.
+            <h2 className="mt-3 text-4xl font-serif font-normal text-white">
+              Eventually, analyze awards wherever you find them.
             </h2>
 
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
-              The most valuable feedback is about confusing booking paths,
-              missing routes, unclear recommendations, and transfer strategy
-              issues.
+            <p className="mt-4 text-sm leading-7 text-slate-400">
+              The current beta is a web app. The long-term goal is a browser
+              assistant that can sit on top of award tools, airline sites, and
+              cash fare pages to help you make better redemption decisions.
             </p>
           </div>
 
-          <div className="border border-white/10 bg-[#090B12]/95 p-6">
-            <p className="text-2xl font-serif font-normal text-white">
-              Share feedback
-            </p>
+          <div className="border border-white/10 bg-white/[0.03] p-6">
+            <p className="font-semibold text-white">Coming later</p>
 
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              The beta feedback form takes about 2 minutes and helps shape
-              future versions of Vantara.
-            </p>
-
-            <div className="mt-6 space-y-3">
-              {[
-                "Report confusing results",
-                "Suggest missing features",
-                "Share award search frustrations",
-                "Test wallet recommendations",
-                "Help improve booking confidence",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="border border-white/10 bg-white/[0.035] p-3 text-sm text-slate-300"
-                >
-                  {item}
-                </div>
-              ))}
+            <div className="mt-4 space-y-3 text-sm text-slate-400">
+              <p>• AI extraction from award screenshots</p>
+              <p>• Cash fare matching for redemption value</p>
+              <p>• Browser extension workflow</p>
+              <p>• Card recommendation and wallet optimization</p>
             </div>
-
-            <a
-              href={feedbackFormUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 block w-full border border-purple-300/40 bg-purple-500/10 p-4 text-center font-semibold text-purple-100 hover:bg-purple-500/20"
-            >
-              Open feedback form
-            </a>
           </div>
         </section>
 
@@ -268,7 +239,7 @@ export default function LandingPage() {
             <p>© 2026 Vantara. Private beta.</p>
             <p>
               Vantara is not affiliated with airlines, banks, or loyalty
-              programs. Award availability can change before booking.
+              programs.
             </p>
           </div>
         </footer>

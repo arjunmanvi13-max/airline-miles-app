@@ -1,21 +1,14 @@
 "use client";
 
 import { FlightDealWithSource } from "@/app/adapters";
-
 import {
   getAwardDurationText,
   getAwardRouteTypeText,
   getAwardScheduleText,
   getAwardSourceLabel,
-    formatAirportTime,
+  formatAirportTime,
 } from "@/components/AwardText";
-
-
-
-import {
-  getBrandStyle,
-  getLogoInitials,
-} from "@/components/BrandBadge";
+import { getBrandStyle, getLogoInitials } from "@/components/BrandBadge";
 
 export default function ResultCard({
   deal,
@@ -50,514 +43,442 @@ export default function ResultCard({
   paidTravelers: number;
   saveTrip: (deal: FlightDealWithSource) => void;
 }) {
-    const dealId = `${deal.airline}-${deal.date}-${deal.from}-${deal.to}-${index}`;
-const isExpanded = expandedDeals.includes(dealId);
-const returnPreview =
-  tripType === "Round trip" ? buildReturnPreview(deal, returnDate) : null;
-    const isRealCached =
-  "dataSource" in deal &&
-  deal.dataSource === "seats_aero_cached";
+  const dealId = `${deal.airline}-${deal.date}-${deal.from}-${deal.to}-${index}`;
+  const isExpanded = expandedDeals.includes(dealId);
 
-const centsPerMile = isRealCached
-  ? null
-  : getCentsPerMile(deal);
+  const returnPreview =
+    tripType === "Round trip" ? buildReturnPreview(deal, returnDate) : null;
 
-const label =
-  centsPerMile !== null
-    ? getDealLabel(centsPerMile)
-    : null;
+  const isRealCached =
+    "dataSource" in deal && deal.dataSource === "seats_aero_cached";
 
-const style =
-  centsPerMile !== null
-    ? getDealStyle(centsPerMile)
-    : "bg-blue-100 text-blue-800";
-    const recommendation = getRecommendation(deal);
+  const centsPerMile = isRealCached ? null : getCentsPerMile(deal);
 
+  const label = centsPerMile !== null ? getDealLabel(centsPerMile) : null;
+  const style =
+    centsPerMile !== null
+      ? getDealStyle(centsPerMile)
+      : "bg-blue-500/20 text-blue-300";
 
+  const recommendation = getRecommendation(deal);
 
-    const {
-      transfer,
-      totalCardPoints,
-      totalAirlineMiles,
-      totalTaxes,
-      totalCashPrice,
-      balanceKnown,
-      canBook,
-      pointsShort,
-    } = getDealTotals(deal);
+  const {
+    transfer,
+    totalCardPoints,
+    totalAirlineMiles,
+    totalTaxes,
+    totalCashPrice,
+    balanceKnown,
+    canBook,
+    pointsShort,
+  } = getDealTotals(deal);
 
-    const transferOptions = getRankedTransferOptions(deal);
-    const displayProgram = transfer?.program || deal.program;
+  const transferOptions = getRankedTransferOptions(deal);
+  const displayProgram = transfer?.program || deal.program;
 
-    return (
-      <div
-        key={`${deal.airline}-${deal.date}-${deal.from}-${deal.to}-${index}`}
-        className="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 md:p-5 mb-4"
-      >
-        <div className="flex flex-col md:flex-row md:justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <div className="flex items-start sm:items-center gap-3 min-w-0">
-  <div
-    className={`w-11 h-11 rounded-full border flex items-center justify-center text-sm font-bold ${getBrandStyle(
-      deal.airline
-    )}`}
-  >
-    {getLogoInitials(deal.airline)}
-  </div>
+  return (
+    <div className="mb-5 border border-white/10 bg-[#090B12] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] md:p-6">
+      <div className="flex flex-col gap-5 md:flex-row md:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 items-start gap-3 sm:items-center">
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-full border text-sm font-bold ${getBrandStyle(
+                  deal.airline
+                )}`}
+              >
+                {getLogoInitials(deal.airline)}
+              </div>
 
-  <div>
-    <p className="font-bold text-lg sm:text-xl text-slate-900 leading-tight">
-  {deal.airline}
-</p>
-    <div className="flex items-center gap-2 mt-1">
-      <span
-  className={`w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-bold ${getBrandStyle(
-    displayProgram
-  )}`}
->
-  {getLogoInitials(displayProgram)}
-</span>
-<p className="text-xs text-slate-500">{displayProgram}</p>
-    </div>
-  </div>
-</div>
+              <div>
+                <p className="text-lg font-semibold leading-tight text-white sm:text-xl">
+                  {deal.airline}
+                </p>
 
-              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">
-                {deal.tag}
+                <div className="mt-1 flex items-center gap-2">
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full border text-[9px] font-bold ${getBrandStyle(
+                      displayProgram
+                    )}`}
+                  >
+                    {getLogoInitials(displayProgram)}
+                  </span>
+
+                  <p className="text-xs text-slate-400">{displayProgram}</p>
+                </div>
+              </div>
+            </div>
+
+            <span className="border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-slate-300">
+              {deal.tag}
+            </span>
+
+            {"dataSource" in deal && (
+              <span
+                className={`border px-3 py-1 text-xs font-semibold ${
+                  deal.dataSource === "seats_aero_cached"
+                    ? "border-emerald-300/30 bg-emerald-500/10 text-emerald-100"
+                    : "border-amber-300/30 bg-amber-500/10 text-amber-100"
+                }`}
+              >
+                {getAwardSourceLabel(deal)}
               </span>
-              {"dataSource" in deal && (
-  <span
-    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-      deal.dataSource === "seats_aero_cached"
-        ? "bg-green-100 text-green-800"
-        : "bg-yellow-100 text-yellow-800"
-    }`}
-  >
-    {getAwardSourceLabel(deal)}
-  </span>
-)}
+            )}
 
-{deal.seatsRemaining && deal.dataSource === "seats_aero_cached" && (
-  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
-    {deal.seatsRemaining} seat
-    {deal.seatsRemaining > 1 ? "s" : ""} left
-  </span>
-)}
+            {deal.seatsRemaining && deal.dataSource === "seats_aero_cached" && (
+              <span className="border border-blue-300/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-100">
+                {deal.seatsRemaining} seat
+                {deal.seatsRemaining > 1 ? "s" : ""} left
+              </span>
+            )}
 
-              {transfer && balanceKnown && (
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    canBook
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {canBook ? "Bookable" : "Not enough points"}
-                </span>
-              )}
+            {transfer && balanceKnown && (
+              <span
+                className={`border px-3 py-1 text-xs font-semibold ${
+                  canBook
+                    ? "border-emerald-300/30 bg-emerald-500/10 text-emerald-100"
+                    : "border-red-300/30 bg-red-500/10 text-red-100"
+                }`}
+              >
+                {canBook ? "Bookable" : "Not enough points"}
+              </span>
+            )}
 
-              {transfer && !balanceKnown && (
-                <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-semibold">
-                  Balance not entered
-                </span>
-              )}
+            {transfer && !balanceKnown && (
+              <span className="border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-slate-300">
+                Balance not entered
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <div className="border border-white/10 bg-white/[0.03] p-4">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Outbound
+              </p>
+
+              <p className="text-sm text-slate-300">
+                {deal.from} → {deal.to} • {deal.date} • {deal.cabin}
+              </p>
+
+              <p className="mt-1 text-sm font-semibold text-white">
+                {getAwardScheduleText(deal)} • {getAwardDurationText(deal)} •{" "}
+                {getAwardRouteTypeText(deal)}
+              </p>
             </div>
 
-            <div className="mt-2 space-y-3">
-  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-    <p className="text-xs font-semibold text-slate-500 mb-1">
-      Outbound
-    </p>
+            {returnPreview && (
+              <div className="border border-white/10 bg-white/[0.03] p-4">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Return
+                </p>
 
-    <p className="text-slate-600 text-sm">
-      {deal.from} → {deal.to} • {deal.date} • {deal.cabin}
-    </p>
+                <p className="text-sm text-slate-300">
+                  {returnPreview.from} → {returnPreview.to} •{" "}
+                  {returnPreview.date} • {deal.cabin}
+                </p>
 
-    <p className="text-sm font-semibold text-slate-900 mt-1">
-  {getAwardScheduleText(deal)}
-  {" • "}
-  {getAwardDurationText(deal)}
-  {" • "}
-  {getAwardRouteTypeText(deal)}
-</p>
-  </div>
+                <p className="mt-1 text-sm font-semibold text-white">
+                  {returnPreview.departureTime} → {returnPreview.arrivalTime} •{" "}
+                  {returnPreview.duration} •{" "}
+                  {deal.dataSource === "seats_aero_cached"
+                    ? "Return details not confirmed in cached data"
+                    : returnPreview.stops === "Nonstop"
+                    ? "Simulated nonstop"
+                    : returnPreview.stopCity
+                    ? `Simulated 1 stop via ${returnPreview.stopCity}`
+                    : "Simulated connection"}
+                </p>
+              </div>
+            )}
+          </div>
 
-  {returnPreview && (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-      <p className="text-xs font-semibold text-slate-500 mb-1">
-        Return
-      </p>
+          <button
+            onClick={() => toggleExpandedDeal(dealId)}
+            className="mt-5 w-full border border-white/10 bg-white/[0.03] p-4 font-semibold text-white transition hover:bg-white/[0.07]"
+          >
+            {isExpanded ? "Hide flight details" : "View flight details"}
+          </button>
 
-      <p className="text-slate-600 text-sm">
-        {returnPreview.from} → {returnPreview.to} • {returnPreview.date} •{" "}
-        {deal.cabin}
-      </p>
+          {isExpanded && (
+            <div className="mt-4 border border-white/10 bg-white/[0.03] p-4">
+              {!deal.segments || deal.segments.length === 0 ? (
+                <div>
+                  <p className="mb-2 font-semibold text-white">
+                    Schedule details
+                  </p>
 
-      <p className="text-sm font-semibold text-slate-900 mt-1">
-        {returnPreview.departureTime} → {returnPreview.arrivalTime}
-        <span className="text-xs text-slate-500 ml-1">
-          {returnPreview.stops === "Nonstop" ? "" : "(+1)"}
-        </span>
-        {" • "}
-        {returnPreview.duration} •{" "}
-        {deal.dataSource === "seats_aero_cached"
-  ? "Return details not confirmed in cached data"
-  : returnPreview.stops === "Nonstop"
-  ? "Simulated nonstop"
-  : returnPreview.stopCity
-  ? `Simulated 1 stop via ${returnPreview.stopCity}`
-  : "Simulated connection"}
-      </p>
-    </div>
-  )}
-</div>
-<button
-  onClick={() => toggleExpandedDeal(dealId)}
-  className="mt-5 w-full border border-slate-300 rounded-xl p-3 font-semibold hover:bg-slate-50"
->
-  {isExpanded ? "Hide flight details" : "View flight details"}
-</button>
+                  <p className="text-sm leading-6 text-slate-300">
+                    This result comes from real cached award availability data.
+                    Availability, mileage cost, taxes, and seat counts may
+                    change before booking confirmation.
+                  </p>
 
-{isExpanded && (
-  <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
-    {!deal.segments || deal.segments.length === 0 ? (
-  <div>
-    <p className="font-semibold text-slate-900 mb-2">
-      Schedule details
-    </p>
-    <p className="text-sm text-slate-600">
-  This result comes from real cached award availability data. Availability,
-mileage cost, taxes, and seat counts are based on Seats.aero data and may
-change before booking confirmation.
-</p>
-    <p className="text-sm text-slate-800 mt-3 font-semibold">
-      Route: {deal.from} → {deal.to}
-    </p>
-    <p className="text-sm text-slate-600">
-      Route certainty: {getAwardRouteTypeText(deal)}
-    </p>
-  </div>
-) : (
-  <>
-    <p className="font-semibold text-slate-900 mb-3">
-      Outbound flight details
-    </p>
+                  <p className="mt-3 text-sm font-semibold text-white">
+                    Route: {deal.from} → {deal.to}
+                  </p>
 
-    <div className="space-y-4">
-      {deal.segments.map((segment, segmentIndex) => (
-        <div key={`${segment.from}-${segment.to}-${segmentIndex}`}>
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-3 sm:gap-4">
-            <div>
-              <p className="font-semibold text-slate-900">
-                {segment.from} → {segment.to}
-              </p>
-              <p className="text-sm text-slate-600">
-                {formatAirportTime(segment.departureTime, segment.from)} →{" "}
-{formatAirportTime(segment.arrivalTime, segment.to)} •{" "}
-{segment.duration}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-{segment.airline}
+                  <p className="text-sm text-slate-300">
+                    Route certainty: {getAwardRouteTypeText(deal)}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-3 font-semibold text-white">
+                    Outbound flight details
+                  </p>
 
-{segment.flightNumber
-  ? ` • Flight ${segment.flightNumber}`
-  : ""}
+                  <div className="space-y-4">
+                    {deal.segments.map((segment, segmentIndex) => (
+                      <div
+                        key={`${segment.from}-${segment.to}-${segmentIndex}`}
+                        className="border border-white/10 bg-black/20 p-4"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+                          <div>
+                            <p className="font-semibold text-white">
+                              {segment.from} → {segment.to}
+                            </p>
 
-{" • "}
+                            <p className="text-sm text-slate-300">
+                              {formatAirportTime(
+                                segment.departureTime,
+                                segment.from
+                              )}{" "}
+                              →{" "}
+                              {formatAirportTime(
+                                segment.arrivalTime,
+                                segment.to
+                              )}{" "}
+                              • {segment.duration}
+                            </p>
 
-{deal.cabin}
-  {segment.aircraft ? ` • ${segment.aircraft}` : ""}
-</p>
+                            <p className="mt-1 text-xs text-slate-400">
+                              {segment.airline}
+                              {segment.flightNumber
+                                ? ` • Flight ${segment.flightNumber}`
+                                : ""}
+                              {" • "}
+                              {deal.cabin}
+                              {segment.aircraft ? ` • ${segment.aircraft}` : ""}
+                            </p>
+                          </div>
+
+                          <span className="h-fit border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-400">
+                            Segment {segmentIndex + 1}
+                          </span>
+                        </div>
+
+                        {deal.segments.length > 1 &&
+                          segmentIndex < deal.segments.length - 1 && (
+                            <div className="mt-3 border-l-2 border-white/10 pl-3 text-xs text-slate-400">
+                              Layover in {segment.to}
+                            </div>
+                          )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
+          )}
 
-            <span className="text-xs bg-white border border-slate-200 rounded-full px-3 py-1 h-fit text-slate-600">
-              Segment {segmentIndex + 1}
+          <p className="mt-2 text-xs text-slate-500">
+            Total shown for {paidTravelers} paid traveler
+            {paidTravelers === 1 ? "" : "s"}
+            {tripType === "Round trip" ? " × round trip" : ""}
+          </p>
+        </div>
+
+        {label && (
+          <span className={`${style} h-fit px-3 py-1 text-sm font-semibold`}>
+            {label}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="border border-purple-300/25 bg-purple-500/10 p-4">
+          <p className="text-xs text-purple-200/80">Total Card Points Cost</p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            {totalCardPoints.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-purple-200/70">
+            {transfer ? `${transfer.card} points` : "estimated miles"}
+          </p>
+        </div>
+
+        <div className="border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs text-slate-400">Total Airline Miles</p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            {totalAirlineMiles.toLocaleString()}
+          </p>
+        </div>
+
+        <div className="border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs text-slate-400">Total Taxes & Fees</p>
+          <p className="mt-2 text-xl font-semibold text-white">
+            ${totalTaxes.toFixed(2)}
+          </p>
+        </div>
+
+        <div className="border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs text-slate-400">Cash Price</p>
+          <p className="mt-2 text-xl font-semibold text-slate-300">
+            {isRealCached ? "N/A" : `$${totalCashPrice}`}
+          </p>
+
+          {isRealCached && (
+            <p className="mt-1 text-xs text-slate-500">
+              Cash fares not provided by Seats.aero
+            </p>
+          )}
+        </div>
+
+        <div className="border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs text-slate-400">Point Value</p>
+          <p className="mt-2 text-xl font-semibold text-slate-300">
+            {centsPerMile !== null
+              ? `${centsPerMile.toFixed(2)}¢ / point`
+              : "N/A"}
+          </p>
+
+          {isRealCached && (
+            <p className="mt-1 text-xs text-slate-500">
+              Requires real cash fare
+            </p>
+          )}
+        </div>
+      </div>
+
+      {transfer ? (
+        <div className="mt-6 border border-purple-300/25 bg-purple-500/10 p-5">
+          <p className="mb-2 font-semibold text-purple-100">
+            Best Booking Strategy
+          </p>
+
+          <p className="text-sm text-purple-100">
+            Transfer {transfer.card} points →{" "}
+            <span className="inline-flex items-center gap-2 font-semibold">
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full border text-[10px] ${getBrandStyle(
+                  transfer.program
+                )}`}
+              >
+                {getLogoInitials(transfer.program)}
+              </span>
+              {transfer.program}
+            </span>
+          </p>
+
+          <p className="mt-2 text-sm text-purple-100/80">
+            Base ratio: 1,000 {transfer.card} points ={" "}
+            {(1000 * transfer.ratio).toLocaleString()} partner points
+          </p>
+
+          {transfer.bonusPercent > 0 && (
+            <p className="mt-1 text-sm text-purple-200">
+              Prototype bonus applied: +{transfer.bonusPercent}%
+            </p>
+          )}
+
+          <p className="mt-1 text-sm text-purple-100/80">
+            Estimated total card points needed:{" "}
+            <span className="font-semibold text-white">
+              {totalCardPoints.toLocaleString()}
+            </span>
+          </p>
+
+          {balanceKnown ? (
+            <p
+              className={`mt-3 text-sm font-semibold ${
+                canBook ? "text-emerald-300" : "text-red-300"
+              }`}
+            >
+              {canBook
+                ? `You have enough ${transfer.card} points to book this.`
+                : `You need ${pointsShort.toLocaleString()} more ${transfer.card} points.`}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-slate-300">
+              Enter your {transfer.card} balance to check if this is bookable.
+            </p>
+          )}
+
+          {transferOptions.length > 1 && (
+            <div className="mt-4 border-t border-purple-300/20 pt-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-purple-200">
+                Other available booking paths
+              </p>
+
+              <div className="space-y-1">
+                {transferOptions.slice(1).map((option: any) => (
+                  <p
+                    key={`${option.card}-${option.program}`}
+                    className="text-xs text-purple-100/80"
+                  >
+                    {option.card} → {option.program}:{" "}
+                    {option.totalPoints.toLocaleString()} points{" "}
+                    {option.canBook
+                      ? "— bookable"
+                      : !option.balanceKnown
+                      ? "— balance unknown"
+                      : `— short ${option.pointsShort.toLocaleString()}`}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 border border-white/10 bg-white/[0.03] p-5">
+          <p className="mb-1 font-semibold text-white">
+            Best Booking Strategy
+          </p>
+
+          <p className="text-sm text-slate-300">
+            Transfer data for this result has not been added yet.
+          </p>
+        </div>
+      )}
+
+      {!isRealCached && (
+        <div className="mt-6 border border-white/10 bg-white/[0.03] p-5">
+          <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <p className="font-semibold text-white">
+              Miles vs Cash Recommendation:
+            </p>
+
+            <span
+              className={`${recommendation.style} px-3 py-1 text-xs font-semibold`}
+            >
+              {recommendation.label}
             </span>
           </div>
 
-          {deal.segments.length > 1 &&
-            segmentIndex < deal.segments.length - 1 && (
-              <div className="mt-3 text-xs text-slate-500 border-l-2 border-slate-300 pl-3">
-                <div className="mt-3 text-xs text-slate-500 border-l-2 border-slate-300 pl-3">
-  Layover in {segment.to} •{" "}
-  {(() => {
-    const currentArrival = new Date(segment.arrivalTime);
-
-    const nextSegment = deal.segments[segmentIndex + 1];
-
-    if (!nextSegment) return "";
-
-    const nextDeparture = new Date(nextSegment.departureTime);
-
-    const diffMs =
-      nextDeparture.getTime() - currentArrival.getTime();
-
-    const totalMinutes = Math.floor(diffMs / 60000);
-
-    const hours = Math.floor(totalMinutes / 60);
-
-    const minutes = totalMinutes % 60;
-
-    return `${hours}h ${minutes}m`;
-  })()}
-</div>
-              </div>
-            )}<p className="font-semibold text-slate-900 mb-3"></p>
+          <p className="text-sm text-slate-300">
+            {recommendation.explanation}
+          </p>
         </div>
-      ))}
+      )}
 
-      {returnPreview && (
-  <div className="mt-5 border-t border-slate-300 pt-4">
-    <p className="font-semibold text-slate-900 mb-3">
-      Return flight details
-    </p>
-
-    <div className="flex flex-col sm:flex-row sm:justify-between gap-3 sm:gap-4">
-      <div>
-        <p className="font-semibold text-slate-900">
-          {returnPreview.from} → {returnPreview.to}
-        </p>
-
-        <p className="text-sm text-slate-600">
-          {returnPreview.departureTime} → {returnPreview.arrivalTime} •{" "}
-          {returnPreview.duration}
-        </p>
-
-        <p className="text-xs text-slate-500 mt-1">
-          {deal.airline} • {deal.cabin} • estimated return segment
-        </p>
-      </div>
-
-      <span className="text-xs bg-white border border-slate-200 rounded-full px-3 py-1 h-fit text-slate-600">
-        Return
-      </span>
-    </div>
-
-    {returnPreview.stops !== "Nonstop" && returnPreview.stopCity && (
-      <div className="mt-3 text-xs text-slate-500 border-l-2 border-slate-300 pl-3">
-        Layover in {returnPreview.stopCity} • approx. 2h
-      </div>
-    )}
-  </div>
-)}
-    </div>
-  </>
-)}
-  </div>
-)}
-
-            <p className="text-xs text-slate-500 mt-1">
-              Total shown for {paidTravelers} paid traveler
-              {paidTravelers === 1 ? "" : "s"}
-              {tripType === "Round trip" ? " × round trip" : ""}
-            </p>
-          </div>
-
-          {label && (
-  <span
-    className={`${style} h-fit px-3 py-1 rounded-full text-sm font-semibold`}
-  >
-    {label}
-  </span>
-)}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mt-5">
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-            <p className="text-xs text-purple-700">Total Card Points Cost</p>
-            <p className="font-bold text-lg text-purple-900">
-              {totalCardPoints.toLocaleString()}
-            </p>
-            <p className="text-xs text-purple-700 mt-1">
-              {transfer ? `${transfer.card} points` : "estimated miles"}
-            </p>
-          </div>
-
-          <div className="bg-slate-50 rounded-xl p-4">
-            <p className="text-xs text-slate-500">Total Airline Miles</p>
-            <p className="font-bold text-lg">
-              {totalAirlineMiles.toLocaleString()}
-            </p>
-          </div>
-
-          <div className="bg-slate-50 rounded-xl p-4">
-            <p className="text-xs text-slate-500">Total Taxes & Fees</p>
-            <p className="font-bold text-lg">${totalTaxes.toFixed(2)}</p>
-          </div>
-
-          <div className="bg-slate-50 rounded-xl p-4">
-  <p className="text-xs text-slate-500">
-    Cash Price
-  </p>
-
-  <p className="text-lg font-semibold text-slate-500 mt-1">
-    {isRealCached ? "N/A" : `$${totalCashPrice}`}
-  </p>
-
-  {isRealCached && (
-    <p className="text-xs text-slate-400 mt-1">
-      Cash fares not provided by Seats.aero
-    </p>
-  )}
-</div>
-
-<div className="bg-slate-50 rounded-xl p-4">
-  <p className="text-xs text-slate-500">Point Value</p>
-
-  <p className="text-lg font-semibold text-slate-500 mt-1">
-    {centsPerMile !== null
-      ? `${centsPerMile.toFixed(2)}¢ / point`
-      : "N/A"}
-  </p>
-
-  {isRealCached && (
-    <p className="text-xs text-slate-400 mt-1">
-      Requires real cash fare
-    </p>
-  )}
-</div>
-
-        
-        </div>
-
-        {transfer ? (
-          <div className="mt-5 bg-purple-50 border border-purple-200 rounded-xl p-4">
-            <p className="font-semibold text-purple-900 mb-1">
-              Best Booking Strategy
-            </p>
-
-            <p className="text-sm text-purple-900">
-              Transfer {transfer.card} points →{" "}
-<span className="inline-flex items-center gap-2 font-semibold">
-  <span
-    className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] ${getBrandStyle(
-      transfer.program
-    )}`}
-  >
-    {getLogoInitials(transfer.program)}
-  </span>
-  {transfer.program}
-</span>
-            </p>
-
-            <p className="text-sm text-purple-900 mt-1">
-              Base ratio: 1,000 {transfer.card} points ={" "}
-              {(1000 * transfer.ratio).toLocaleString()} partner points
-            </p>
-
-            {transfer.bonusPercent > 0 && (
-              <p className="text-sm text-purple-900 mt-1">
-                Prototype bonus applied: +{transfer.bonusPercent}%
-              </p>
-            )}
-            <p className="text-sm text-purple-900 mt-1">
-  Estimated total card points needed:{" "}
-  <span className="font-semibold">
-    {totalCardPoints.toLocaleString()}
-  </span>
-</p>
-
-<p className="text-xs text-purple-700 mt-2">
-  Recommendation reason:{" "}
-  {transfer.canBook
-    ? "this is the best option you can currently book with your saved balances."
-    : !transfer.balanceKnown
-    ? "this is the lowest-cost path among your selected cards, but your balance is not entered."
-    : "this is the best available path, but you need more points to book it."}
-</p>
-
-
-
-            {balanceKnown ? (
-              <p
-                className={`text-sm mt-2 font-semibold ${
-                  canBook ? "text-green-800" : "text-red-800"
-                }`}
-              >
-                {canBook
-                  ? `You have enough ${transfer.card} points to book this.`
-                  : `You need ${pointsShort.toLocaleString()} more ${transfer.card} points.`}
-              </p>
-            ) : (
-              <p className="text-sm text-slate-600 mt-2">
-                Enter your {transfer.card} balance to check if this is bookable.
-              </p>
-            )}
-
-            {transferOptions.length > 1 && (
-              <div className="mt-3 border-t border-purple-200 pt-3">
-                <p className="text-xs font-semibold text-purple-900 mb-1">
-                  Other available booking paths
-                </p>
-
-                {transferOptions.slice(1).map((option: any) => (
-  <p
-    key={`${option.card}-${option.program}`}
-    className="text-xs text-purple-800"
-  >
-    {option.card} → {option.program}:{" "}
-    {option.totalPoints.toLocaleString()} points{" "}
-    {option.canBook
-      ? "✅ bookable"
-      : !option.balanceKnown
-      ? "— balance unknown"
-      : `— short ${option.pointsShort.toLocaleString()}`}
-  </p>
-))}
-              </div>
-            )}
-          </div>
-        ) : (
-          
-          <div className="mt-5 bg-slate-50 rounded-xl p-4">
-            <p className="font-semibold text-slate-800 mb-1">
-              Best Booking Strategy
-            </p>
-            <p className="text-sm text-slate-600">
-              Transfer data for this result has not been added yet.
-            </p>
-          </div>
-        )}
-
-        {!isRealCached && (
-  <div className="mt-5 bg-slate-50 rounded-xl p-4">
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-      <p className="font-semibold text-slate-800">
-        Miles vs Cash Recommendation:
-      </p>
-
-      <span
-        className={`${recommendation.style} px-3 py-1 rounded-full text-xs font-semibold`}
-      >
-        {recommendation.label}
-      </span>
-    </div>
-
-    <p className="text-sm text-slate-600">
-      {recommendation.explanation}
-    </p>
-  </div>
-)}
-
-       
-{deal.bookingLink && (
-  <a
-    href={deal.bookingLink}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="mt-4 block w-full bg-purple-700 text-white text-center rounded-xl p-3 font-semibold hover:bg-purple-800"
-  >
-    Continue to {displayProgram}
-  </a>
-)}
-
-        <button
-          onClick={() => saveTrip(deal)}
-          className="mt-4 w-full border border-slate-300 rounded-xl p-3 font-semibold hover:bg-slate-50"
+      {deal.bookingLink && (
+        <a
+          href={deal.bookingLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 block w-full border border-purple-300/40 bg-purple-500/10 p-4 text-center font-semibold text-purple-100 hover:bg-purple-500/20"
         >
-          Save this option
-        </button>
-      </div>
-    );
+          Continue to {displayProgram}
+        </a>
+      )}
+
+      <button
+        onClick={() => saveTrip(deal)}
+        className="mt-4 w-full border border-white/10 bg-white/[0.03] p-4 font-semibold text-white transition hover:bg-white/[0.07]"
+      >
+        Save this option
+      </button>
+    </div>
+  );
 }

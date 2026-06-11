@@ -1,4 +1,5 @@
 import { cardEcosystems, transferPartners } from "@/app/data";
+import Link from "next/link";
 
 type PointBalances = Record<string, string>;
 
@@ -42,18 +43,26 @@ export default function WalletScreen({
     <div className="overflow-hidden border border-white/10 bg-[#090B12]/95 p-5 text-white shadow-[0_28px_90px_rgba(0,0,0,0.42)] md:p-8">
       <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
+          <div className="mb-6">
+  <Link
+    href="/"
+    className="text-sm text-slate-400 hover:text-white transition"
+  >
+    ← Home
+  </Link>
+</div>
           <p className="text-[11px] uppercase tracking-[0.38em] text-purple-300">
             Points wallet
           </p>
 
           <h2 className="mt-3 text-4xl font-serif font-normal tracking-tight text-white md:text-5xl">
-            Build your travel wallet.
-          </h2>
+  Create your Vantara profile.
+</h2>
 
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
-            Select the transferable points ecosystems you use. Vantara will use
-            this to prioritize booking strategies, transfer paths, and options
-            you can actually book.
+            Tell Vantara which points ecosystems you have and roughly how many
+points are available. Every recommendation and transfer strategy
+will be personalized around your wallet.
           </p>
         </div>
 
@@ -261,7 +270,7 @@ className="mt-3 w-full border border-white/10 p-4 text-lg font-semibold placehol
           onClick={onBackToSearch}
           className="w-full border border-white/10 bg-white/[0.05] p-4 font-semibold text-white transition hover:bg-white/[0.09]"
         >
-          Continue to Search
+          Continue to Analyzer
         </button>
       </div>
     </div>

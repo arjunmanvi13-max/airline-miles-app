@@ -33,7 +33,7 @@ import CalculatorScreen from "@/components/CalculatorScreen";
 
 
 
-type View = "Search" | "Calculator" | "Wallet" | "Results" | "Saved" | "Data";
+type View = "Wallet" | "Analyzer" | "Saved" | "Data";
 type TripType = "Round trip" | "One way" | "Multi-city";
 type PointBalances = Record<string, string>;
 type SortMode =
@@ -112,7 +112,7 @@ export default function Home() {
   
   const [expandedCardDatabases, setExpandedCardDatabases] = useState<string[]>([]);
   const [expandedDeals, setExpandedDeals] = useState<string[]>([]);
-  const [view, setView] = useState<View>("Search");
+  const [view, setView] = useState<View>("Wallet");
   const [tripType, setTripType] = useState<TripType>("Round trip");
   const [cabin, setCabin] = useState("Economy");
   const [selectedCards, setSelectedCards] = useState<string[]>(["Amex"]);
@@ -180,6 +180,7 @@ const hasOnlyPlaceholderResults =
       setInfantsInSeat(profile.infantsInSeat || 0);
       setInfantsOnLap(profile.infantsOnLap || 0);
       setPointBalances(profile.pointBalances || defaultBalances);
+      setView("Analyzer");
     }
 
     if (savedTripData) {
@@ -390,7 +391,7 @@ const pointsShort = transfer ? transfer.pointsShort : 0;
 
   setIsSearching(true);
 setExpandedDeals([]);
-setView("Results");
+setView("Analyzer");
 
   const deals = await searchFlightDeals({
     from,
@@ -467,17 +468,8 @@ const renderResultCard = (
         </div>
       </header>
 
-      <nav className="mb-8 grid grid-cols-2 md:grid-cols-6 gap-px overflow-hidden border border-white/10 bg-white/10">
-        {(
-  [
-    "Search",
-    "Calculator",
-    "Results",
-    "Wallet",
-    "Saved",
-    "Data",
-  ] as View[]
-).map(
+      <nav className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden border border-white/10 bg-white/10">
+        {(["Wallet", "Analyzer", "Saved", "Data"] as View[]).map(
           (item) => (
             <button
               key={item}
@@ -494,88 +486,42 @@ const renderResultCard = (
         )}
       </nav>
 
-      {view === "Search" && (
-        <SearchScreen
-          tripType={tripType}
-          setTripType={setTripType}
-          from={from}
-          setFrom={setFrom}
-          to={to}
-          setTo={setTo}
-          departureDate={departureDate}
-          setDepartureDate={setDepartureDate}
-          returnDate={returnDate}
-          setReturnDate={setReturnDate}
-          cabin={cabin}
-          setCabin={setCabin}
-          adults={adults}
-          setAdults={setAdults}
-          children={children}
-          setChildren={setChildren}
-          infantsInSeat={infantsInSeat}
-          setInfantsInSeat={setInfantsInSeat}
-          infantsOnLap={infantsOnLap}
-          setInfantsOnLap={setInfantsOnLap}
-          flexibleDates={flexibleDates}
-          setFlexibleDates={setFlexibleDates}
-          includeNearbyAirports={includeNearbyAirports}
-          setIncludeNearbyAirports={setIncludeNearbyAirports}
-          applyTransferBonuses={applyTransferBonuses}
-          setApplyTransferBonuses={setApplyTransferBonuses}
-          isSearching={isSearching}
-          handleSearch={handleSearch}
-          selectedCards={selectedCards}
-          pointBalances={pointBalances}
-          onEditWallet={() => setView("Wallet")}
-        />
-      )}
+      
 
-      {view === "Calculator" && (
+      <div className={view === "Analyzer" ? "block" : "hidden"}>
   <CalculatorScreen
     selectedCards={selectedCards}
     applyTransferBonuses={applyTransferBonuses}
     pointBalances={pointBalances}
   />
-)}
+</div>
 
-      {view === "Wallet" && (
-        <WalletScreen
-          selectedCards={selectedCards}
-          pointBalances={pointBalances}
-          expandedCardDatabases={expandedCardDatabases}
-          onToggleCard={toggleCard}
-          onToggleCardDatabase={toggleCardDatabase}
-          onUpdatePointBalance={updatePointBalance}
-          onSaveProfile={saveProfile}
-          onBackToSearch={() => setView("Search")}
-        />
-      )}
+<div className={view === "Wallet" ? "block" : "hidden"}>
+  <WalletScreen
+    selectedCards={selectedCards}
+    pointBalances={pointBalances}
+    expandedCardDatabases={expandedCardDatabases}
+    onToggleCard={toggleCard}
+    onToggleCardDatabase={toggleCardDatabase}
+    onUpdatePointBalance={updatePointBalance}
+    onSaveProfile={() => {
+      saveProfile();
+      setView("Analyzer");
+    }}
+    onBackToSearch={() => setView("Analyzer")}
+  />
+</div>
 
-      {view === "Results" && (
-        <ResultsScreen
-          paidTravelers={paidTravelers}
-          tripType={tripType}
-          sortMode={sortMode}
-          setSortMode={setSortMode}
-          nonstopOnly={nonstopOnly}
-          setNonstopOnly={setNonstopOnly}
-          isSearching={isSearching}
-          hasRealResults={hasRealResults}
-          hasOnlyPlaceholderResults={hasOnlyPlaceholderResults}
-          displayedResults={displayedResults}
-          renderResultCard={renderResultCard}
-          onEditSearch={() => setView("Search")}
-        />
-      )}
+<div className={view === "Saved" ? "block" : "hidden"}>
+  <SavedTrips
+    savedTrips={savedTrips}
+    onRemoveSavedTrip={removeSavedTrip}
+  />
+</div>
 
-      {view === "Saved" && (
-        <SavedTrips
-          savedTrips={savedTrips}
-          onRemoveSavedTrip={removeSavedTrip}
-        />
-      )}
-
-      {view === "Data" && <DataNotes />}
+<div className={view === "Data" ? "block" : "hidden"}>
+  <DataNotes />
+</div>
     </div>
   </main>
 );

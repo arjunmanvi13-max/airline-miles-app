@@ -89,6 +89,40 @@ export const getBestTransferOption = (
   return options.length > 0 ? options[0] : null;
 };
 
+export const getWalletStatus = (
+  deal: FlightDeal,
+  selectedCards: string[],
+  applyTransferBonuses: boolean,
+  pointBalances: Record<string, string>
+) => {
+  const bestOption = getBestTransferOption(
+    deal,
+    selectedCards,
+    applyTransferBonuses
+  );
+
+  if (!bestOption) {
+    return {
+      canBook: false,
+      shortage: null,
+      balance: null,
+    };
+  }
+
+  const balance = Number(
+    (pointBalances[bestOption.card] || "0").replace(/,/g, "")
+  );
+
+  return {
+    canBook: balance >= bestOption.requiredCardPoints,
+    shortage: Math.max(
+      0,
+      bestOption.requiredCardPoints - balance
+    ),
+    balance,
+  };
+};
+
 export const getUnifiedPointsCost = (
   deal: FlightDeal,
   selectedCards: string[],
@@ -328,6 +362,92 @@ export const getRecommendation = (deal: FlightDeal) => {
     explanation:
       "This redemption gives low value, so paying cash may be smarter.",
   };
+};
+
+export const getRedemptionScore = ({
+  miles,
+  taxes,
+  cashPrice,
+  cabin,
+}: {
+  miles: number;
+  taxes: number;
+  cashPrice: number;
+  cabin: string;
+}) => {
+  if (!miles || !cashPrice) return null;
+
+  const cpp = ((cashPrice - taxes) / miles) * 100;
+
+  let score = 0;
+
+  // CPP = main driver
+  if (cpp >= 4.0) score = 95;
+  else if (cpp >= 3.0) score = 88;
+  else if (cpp >= 2.5) score = 82;
+  else if (cpp >= 2.0) score = 74;
+  else if (cpp >= 1.7) score = 68;
+  else if (cpp >= 1.4) score = 60;
+  else if (cpp >= 1.1) score = 48;
+  else if (cpp >= 0.8) score = 35;
+  else score = 20;
+
+  // Premium cabin bump
+  if (cabin === "Premium Economy") score += 3;
+  if (cabin === "Business") score += 8;
+  if (cabin === "First") score += 12;
+
+  // Taxes adjustment
+  if (taxes <= 25) score += 4;
+  else if (taxes <= 100) score += 1;
+  else if (taxes > 250) score -= 8;
+  else if (taxes > 100) score -= 4;
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+};
+
+
+
+export const getRedemptionLabel = (score: number) => {
+  if (score >= 90) return "Exceptional";
+  if (score >= 80) return "Excellent";
+  if (score >= 70) return "Very Good";
+  if (score >= 60) return "Good";
+  if (score >= 45) return "Average";
+  if (score >= 30) return "Weak";
+  return "Poor";
+};
+
+export const getRedemptionReasons = ({
+  miles,
+  taxes,
+  cashPrice,
+  cabin,
+}: {
+  miles: number;
+  taxes: number;
+  cashPrice: number;
+  cabin: string;
+}) => {
+  if (!miles || !cashPrice) return [];
+
+  const cpp = ((cashPrice - taxes) / miles) * 100;
+  const reasons: string[] = [];
+
+  if (cpp >= 2.5) reasons.push("Exceptional cents-per-point value.");
+  else if (cpp >= 2.0) reasons.push("Strong cents-per-point value.");
+  else if (cpp >= 1.5) reasons.push("Solid redemption value.");
+  else if (cpp < 1.0) reasons.push("Low redemption value compared to cash.");
+
+  if (cabin === "Business") reasons.push("Premium cabin increases redemption value.");
+  if (cabin === "First") reasons.push("First class awards can justify higher point costs.");
+  if (cabin === "Premium Economy") reasons.push("Premium economy adds moderate value over economy.");
+
+  if (taxes <= 25) reasons.push("Low taxes and fees improve the booking.");
+  else if (taxes > 250) reasons.push("High taxes reduce the overall value.");
+  else if (taxes > 100) reasons.push("Taxes are somewhat high for an award booking.");
+
+  return reasons;
 };
 
 const aircraftOptions = [
@@ -615,4 +735,161 @@ const baseDeal = {
     ...deal,
     tag: getDealTag(deal, index),
   }));
+};
+
+export const getWalletFitScore = ({
+  requiredPoints,
+  balance,
+}: {
+  requiredPoints: number;
+  balance: number | null;
+}) => {
+  if (balance === null) return null;
+
+  const ratio = balance / requiredPoints;
+
+  if (ratio >= 2) return 100;
+  if (ratio >= 1.5) return 90;
+  if (ratio >= 1.2) return 80;
+  if (ratio >= 1) return 70;
+  if (ratio >= 0.8) return 50;
+
+  return 20;
+};
+
+export const getWalletFitLabel = (score: number | null) => {
+  if (score === null) return "Unknown";
+  if (score >= 90) return "Excellent";
+  if (score >= 70) return "Good";
+  if (score >= 50) return "Tight";
+  return "Poor";
+};
+
+export const getWalletRecommendationText = ({
+  canBook,
+  balance,
+  shortage,
+  card,
+  program,
+}: {
+  canBook: boolean;
+  balance: number | null;
+  shortage: number;
+  card: string;
+  program: string;
+}) => {
+  if (balance === null) {
+    return {
+      title: "Add your balance",
+      body: `Enter your ${card} balance to see if you can book through ${program}.`,
+      tone: "neutral",
+    };
+  }
+
+  if (canBook) {
+    return {
+      title: "You have enough points",
+      body: `Transfer from ${card} to ${program} and book this award after confirming availability.`,
+      tone: "good",
+    };
+  }
+
+  return {
+    title: "You need more points",
+    body: `You are short by ${shortage.toLocaleString()} ${card} points for this transfer path.`,
+    tone: "warning",
+  };
+};
+
+export const getBookingDecision = ({
+  redemptionScore,
+  walletFitScore,
+  canBook,
+  centsPerPoint,
+}: {
+  redemptionScore: number | null;
+  walletFitScore: number | null;
+  canBook: boolean;
+  centsPerPoint: number | null;
+}) => {
+  if (redemptionScore === null && centsPerPoint === null) {
+    return {
+      label: "Needs more data",
+      tone: "neutral",
+      explanation:
+        "Add a cash price to judge redemption value more accurately.",
+    };
+  }
+
+  if (!canBook) {
+    return {
+      label: "Do not transfer yet",
+      tone: "warning",
+      explanation:
+        "This award may be useful, but your entered wallet balance does not currently cover the best transfer path.",
+    };
+  }
+
+  if ((redemptionScore ?? 0) >= 80 && (walletFitScore ?? 0) >= 70) {
+    return {
+      label: "Book with points",
+      tone: "strong",
+      explanation:
+        "This looks like a strong redemption and your wallet appears well-positioned to book it.",
+    };
+  }
+
+  if (centsPerPoint !== null && centsPerPoint < 1.1) {
+    return {
+      label: "Consider paying cash",
+      tone: "bad",
+      explanation:
+        "The redemption value looks weak compared with paying cash.",
+    };
+  }
+
+  return {
+    label: "Compare before booking",
+    tone: "neutral",
+    explanation:
+      "This award may be reasonable, but compare cash price, alternate programs, and transfer risk before booking.",
+  };
+};
+
+export const getPreservePointsAdvice = ({
+  bestCard,
+  selectedCards,
+}: {
+  bestCard: string | null;
+  selectedCards: string[];
+}) => {
+  if (!bestCard) {
+    return "No preferred card strategy yet. Add award details to generate a recommendation.";
+  }
+
+  if (bestCard === "Bilt") {
+    return "Using Bilt can be attractive when it unlocks partners like Alaska or American while preserving larger Amex and Chase balances.";
+  }
+
+  if (bestCard === "Chase") {
+    return "Chase points are highly flexible. Use them when they clearly offer the best path, but preserve them if another wallet can book for a similar cost.";
+  }
+
+  if (bestCard === "Amex") {
+    return "Amex is strong for international premium-cabin partners. This is a good use when the transfer path is efficient or a bonus is available.";
+  }
+
+  if (bestCard === "Capital One") {
+    return "Capital One can be useful for international partners. This may preserve Chase or Amex flexibility for future trips.";
+  }
+
+  if (bestCard === "Citi") {
+    return "Citi can be valuable for niche airline partners. This may be a smart use if it avoids draining more flexible balances.";
+  }
+
+  if (bestCard === "Wells Fargo") {
+    return "Wells Fargo transfer options are newer, but can be useful when they match the award program cleanly.";
+  }
+
+  return `Using ${bestCard} appears to be the most efficient available wallet path.`;
 };
