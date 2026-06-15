@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Vantara",
+  "version": "0.1.0",
+  "description": "Analyze award flight screenshots before transferring points.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Vantara"
+  },
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["http://localhost:3000/*"]
+}
