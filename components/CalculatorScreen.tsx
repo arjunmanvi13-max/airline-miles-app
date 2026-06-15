@@ -14,7 +14,61 @@ import {
   getWalletRecommendationText,
 } from "@/app/logic";
 
+import AirportAutocomplete from "@/components/AirportAutocomplete";
+import CalendarInput from "@/components/CalendarInput";
+
 type EntryMode = "Automatic" | "Manual";
+
+const AIRLINE_OPTIONS = [
+  "Alaska Airlines",
+  "American Airlines",
+  "Delta Air Lines",
+  "United Airlines",
+  "JetBlue",
+  "Southwest Airlines",
+  "Air Canada",
+  "Air France",
+  "KLM",
+  "British Airways",
+  "Iberia",
+  "Aer Lingus",
+  "Lufthansa",
+  "SWISS",
+  "Austrian Airlines",
+  "Turkish Airlines",
+  "Emirates",
+  "Qatar Airways",
+  "Etihad Airways",
+  "Singapore Airlines",
+  "Cathay Pacific",
+  "ANA",
+  "Japan Airlines",
+  "Virgin Atlantic",
+  "Qantas",
+];
+
+const PROGRAM_OPTIONS = [
+  "Alaska Mileage Plan",
+  "American AAdvantage",
+  "Delta SkyMiles",
+  "United MileagePlus",
+  "JetBlue TrueBlue",
+  "Southwest Rapid Rewards",
+  "Air Canada Aeroplan",
+  "Air France-KLM Flying Blue",
+  "British Airways Executive Club",
+  "Iberia Plus",
+  "Aer Lingus AerClub",
+  "Avianca LifeMiles",
+  "Emirates Skywards",
+  "Qatar Airways Privilege Club",
+  "Etihad Guest",
+  "Singapore KrisFlyer",
+  "Cathay Pacific Asia Miles",
+  "ANA Mileage Club",
+  "Virgin Atlantic Flying Club",
+  "Qantas Frequent Flyer",
+];
 
 type CashFlightOption = {
   offerId: string;
@@ -60,6 +114,8 @@ const [miles, setMiles] = useState("");
 
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(
     null
+
+    
   );
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -183,6 +239,10 @@ const [miles, setMiles] = useState("");
     bestCard: bestOption ? bestOption.card : null,
     selectedCards,
   });
+
+  
+
+  
 
   const handleScreenshotUpload = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -523,12 +583,27 @@ if (data.cabin) setCabin(data.cabin);
               airline, route, date, miles, and taxes when visible.
             </p>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleScreenshotUpload}
-              className="mt-4 block w-full text-sm text-slate-400 file:mr-4 file:border-0 file:bg-purple-500/15 file:px-4 file:py-3 file:font-semibold file:text-purple-100 hover:file:bg-purple-500/25"
-            />
+            <label className="mt-4 flex cursor-pointer flex-col gap-3 border border-white/10 bg-[#090B12] p-5 transition hover:border-purple-300/40 hover:bg-purple-500/10 sm:flex-row sm:items-center sm:justify-between">
+  <div>
+    <p className="text-sm font-semibold text-white">
+      {screenshotFile ? screenshotFile.name : "Choose screenshot"}
+    </p>
+    <p className="mt-1 text-xs text-slate-500">
+      PNG, JPG, or screenshot from PointsYeah, Seats.aero, or airline sites
+    </p>
+  </div>
+
+  <span className="border border-purple-300/40 bg-purple-500/10 px-4 py-3 text-sm font-semibold text-purple-100">
+    Browse file
+  </span>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleScreenshotUpload}
+    className="hidden"
+  />
+</label>
 
             {screenshotPreview && (
               <div className="mt-4 border border-white/10 bg-black/30 p-3">
@@ -547,18 +622,33 @@ if (data.cabin) setCabin(data.cabin);
             disabled={!screenshotFile || isExtracting}
             className="mt-4 w-full border border-purple-300/40 bg-purple-500/10 p-4 font-semibold text-purple-100 transition hover:bg-purple-500/20 disabled:opacity-50"
           >
-            {isExtracting ? "Extracting award details..." : "Extract details with AI"}
+            {isExtracting ? "Extracting award details..." : "Extract Details"}
           </button>
 
-          <label className="mt-4 flex items-center gap-3 border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={manualOverride}
-              onChange={(e) => setManualOverride(e.target.checked)}
-              className="h-4 w-4 accent-purple-500"
-            />
-            Override extracted details
-          </label>
+          <label className="group flex cursor-pointer items-center justify-between border border-white/10 bg-[#090B12] p-4 text-sm text-slate-300 transition hover:border-purple-300/40 hover:bg-purple-500/10">
+  <div>
+    <p className="font-semibold text-white">Override extracted details</p>
+    <p className="mt-1 text-xs text-slate-500">
+      Unlock AI-filled fields to edit airline, route, date, miles, taxes, and fare.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => setManualOverride((current) => !current)}
+    className={`relative h-7 w-12 border transition ${
+      !detailsLocked
+        ? "border-purple-300/60 bg-purple-500/30"
+        : "border-white/15 bg-white/5"
+    }`}
+  >
+    <span
+      className={`absolute top-1 h-5 w-5 bg-white transition ${
+        !detailsLocked ? "left-6" : "left-1"
+      }`}
+    />
+  </button>
+</label>
         </>
       )}
 
@@ -623,79 +713,97 @@ if (data.cabin) setCabin(data.cabin);
 )}
 
       <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <input
-          value={airline}
-          onChange={(e) => setAirline(e.target.value)}
-          placeholder="Airline, ex: Alaska Airlines"
-          disabled={detailsLocked}
-          style={readOnlyStyle}
-          className={inputClass}
-        />
+  <select
+    value={airline}
+    onChange={(e) => setAirline(e.target.value)}
+    disabled={detailsLocked}
+    style={readOnlyStyle}
+    className={inputClass}
+  >
+    <option value="">Airline, ex: Alaska Airlines</option>
+    {AIRLINE_OPTIONS.map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
 
-        <input
-          value={program}
-          onChange={(e) => setProgram(e.target.value)}
-          placeholder="Program, ex: Mileage Plan"
-          disabled={detailsLocked}
-          style={readOnlyStyle}
-          className={inputClass}
-        />
+  <select
+    value={program}
+    onChange={(e) => setProgram(e.target.value)}
+    disabled={detailsLocked}
+    style={readOnlyStyle}
+    className={inputClass}
+  >
+    <option value="">Program, ex: Mileage Plan</option>
+    {PROGRAM_OPTIONS.map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
 
-        <input
-          value={route}
-          onChange={(e) => setRoute(e.target.value)}
-          placeholder="Route, ex: TPA → SEA"
-          disabled={detailsLocked}
-          style={readOnlyStyle}
-          className={inputClass}
-        />
+  <div className="grid grid-cols-2 gap-4 md:col-span-1">
+    <AirportAutocomplete
+      label="From"
+      selectedAirport={origin}
+      onSelect={setOrigin}
+      disabled={detailsLocked}
+    />
 
-        <input
-          type="date"
-          value={departureDate}
-          onChange={(e) => setDepartureDate(e.target.value)}
-          disabled={detailsLocked}
-          style={readOnlyStyle}
-          className={inputClass}
-        />
+    <AirportAutocomplete
+      label="To"
+      selectedAirport={destination}
+      onSelect={setDestination}
+      disabled={detailsLocked}
+    />
+  </div>
 
-        <input
-          value={miles}
-          onChange={(e) => setMiles(e.target.value)}
-          placeholder="Miles required, ex: 37,500"
-          disabled={detailsLocked}
-          style={readOnlyStyle}
-          className={inputClass}
-        />
+  <CalendarInput
+    label="Date"
+    value={departureDate}
+    onChange={setDepartureDate}
+    disabled={detailsLocked}
+  />
 
-        <input
-          value={taxes}
-          onChange={(e) => setTaxes(e.target.value)}
-          placeholder="Taxes & fees optional, ex: 5.60"
-          disabled={detailsLocked}
-          style={readOnlyStyle}
-          className={inputClass}
-        />
+  <input
+    value={miles}
+    onChange={(e) => setMiles(e.target.value)}
+    placeholder="Miles required, ex: 37,500"
+    disabled={detailsLocked}
+    style={readOnlyStyle}
+    className={inputClass}
+  />
 
-        <input
-          value={cashPrice}
-          onChange={(e) => setCashPrice(e.target.value)}
-          placeholder="Cash price, ex: 3200"
-          style={{ backgroundColor: "#111111", color: "white" }}
-          className={inputClass}
-        />
+  <input
+    value={taxes}
+    onChange={(e) => setTaxes(e.target.value)}
+    placeholder="Taxes & fees optional, ex: 5.60"
+    disabled={detailsLocked}
+    style={readOnlyStyle}
+    className={inputClass}
+  />
 
-        <button
-          type="button"
-          onClick={() => findCashPrice({})}
-          disabled={!route || !departureDate || isFindingCashPrice}
-          className="border border-green-300/30 bg-green-500/10 p-4 text-sm font-semibold text-green-200 disabled:opacity-50"
-        >
-          {isFindingCashPrice
-            ? "Finding estimated cash fare..."
-            : "Find estimated cash fare"}
-        </button>
-      </div>
+  <input
+  value={cashPrice}
+  onChange={(e) => setCashPrice(e.target.value)}
+  placeholder="Cash price, ex: 3200"
+  disabled={detailsLocked}
+  style={readOnlyStyle}
+  className={inputClass}
+/>
+
+  <button
+    type="button"
+    onClick={() => findCashPrice({})}
+    disabled={!origin || !destination || !departureDate || isFindingCashPrice}
+    className="border border-green-300/30 bg-green-500/10 p-4 text-sm font-semibold text-green-200 transition hover:bg-green-500/20 disabled:opacity-50"
+  >
+    {isFindingCashPrice
+      ? "Finding estimated cash fare..."
+      : "Find estimated cash fare"}
+  </button>
+</div>
 
       <div className="mt-8 border-t border-white/10 pt-6">
         <p className="text-xs uppercase tracking-[0.22em] text-slate-500">

@@ -7,11 +7,13 @@ export default function CalendarInput({
   value,
   comparisonDate,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: string;
   comparisonDate?: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -79,12 +81,12 @@ export default function CalendarInput({
   };
 
   const displayValue = value
-    ? new Date(value + "T00:00:00").toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "";
+  ? new Date(value + "T00:00:00").toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    })
+  : "";
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -93,12 +95,16 @@ export default function CalendarInput({
       </label>
 
       <button
-        type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="w-full border border-white/10 bg-[#111111] px-4 py-4 text-left text-sm text-white transition-all hover:border-white/20 focus:border-purple-300"
-      >
-        {displayValue || `Select ${label.toLowerCase()}`}
-      </button>
+  type="button"
+  disabled={disabled}
+  onClick={() => {
+    if (disabled) return;
+    setIsOpen((current) => !current);
+  }}
+  className="w-full border border-white/10 bg-[#111111] px-4 py-4 text-left text-sm text-white transition-all hover:border-white/20 focus:border-purple-300 disabled:cursor-not-allowed disabled:bg-[#0B0B0B] disabled:text-slate-400 disabled:opacity-60"
+>
+  {displayValue || "mm/dd/yyyy"}
+</button>
 
       {isOpen && (
         <div className="absolute z-40 mt-2 w-full border border-white/10 bg-[#161616] p-4 shadow-2xl md:w-80">

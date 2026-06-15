@@ -22,8 +22,7 @@ import {
   getAwardRouteTypeText,
   getAwardScheduleText,
 } from "@/components/AwardText";
-import DataNotes from "@/components/DataNotes";
-import SavedTrips from "@/components/SavedTrips";
+
 import WalletScreen from "@/components/WalletScreen";
 import SearchScreen from "@/components/SearchScreen";
 import ResultsScreen from "@/components/ResultsScreen";
@@ -33,7 +32,7 @@ import CalculatorScreen from "@/components/CalculatorScreen";
 
 
 
-type View = "Wallet" | "Analyzer" | "Saved" | "Data";
+type View = "Wallet" | "Analyzer";
 type TripType = "Round trip" | "One way" | "Multi-city";
 type PointBalances = Record<string, string>;
 type SortMode =
@@ -134,7 +133,7 @@ export default function Home() {
   const [applyTransferBonuses, setApplyTransferBonuses] = useState(true);
 
   const [results, setResults] = useState<FlightDealWithSource[]>([]);
-  const [savedTrips, setSavedTrips] = useState<FlightDealWithSource[]>([]);
+
   const [isSearching, setIsSearching] = useState(false);
 
   const [sortMode, setSortMode] = useState<SortMode>("Best overall");
@@ -167,7 +166,7 @@ const hasOnlyPlaceholderResults =
 
   useEffect(() => {
     const savedProfile = localStorage.getItem("airlineMilesProfile");
-    const savedTripData = localStorage.getItem("savedTrips");
+    
 
     if (savedProfile) {
       const profile = JSON.parse(savedProfile);
@@ -182,11 +181,8 @@ const hasOnlyPlaceholderResults =
       setPointBalances(profile.pointBalances || defaultBalances);
       setView("Analyzer");
     }
-
-    if (savedTripData) {
-      setSavedTrips(JSON.parse(savedTripData));
-    }
-  }, []);
+}, []);
+     
 
   const getNumericBalance = (card: string) => {
     const rawBalance = pointBalances[card];
@@ -364,17 +360,7 @@ const pointsShort = transfer ? transfer.pointsShort : 0;
     alert("Profile saved on this browser.");
   };
 
-  const saveTrip = (deal: FlightDealWithSource) => {
-    const updated = [...savedTrips, deal];
-    setSavedTrips(updated);
-    localStorage.setItem("savedTrips", JSON.stringify(updated));
-  };
-
-  const removeSavedTrip = (indexToRemove: number) => {
-    const updated = savedTrips.filter((_, index) => index !== indexToRemove);
-    setSavedTrips(updated);
-    localStorage.setItem("savedTrips", JSON.stringify(updated));
-  };
+  
 
   const handleSearch = async () => {
   if (tripType === "Multi-city") return;
@@ -432,7 +418,7 @@ const renderResultCard = (
     getRankedTransferOptions={getRankedTransferOptions}
     getDealTotals={getDealTotals}
     paidTravelers={paidTravelers}
-    saveTrip={saveTrip}
+    saveTrip={() => {}}
   />
 );
 
@@ -468,8 +454,8 @@ const renderResultCard = (
         </div>
       </header>
 
-      <nav className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden border border-white/10 bg-white/10">
-        {(["Wallet", "Analyzer", "Saved", "Data"] as View[]).map(
+      <nav className="mb-8 grid grid-cols-2 gap-px overflow-hidden border border-white/10 bg-white/10">
+  {(["Wallet", "Analyzer"] as View[]).map(
           (item) => (
             <button
               key={item}
@@ -512,16 +498,7 @@ const renderResultCard = (
   />
 </div>
 
-<div className={view === "Saved" ? "block" : "hidden"}>
-  <SavedTrips
-    savedTrips={savedTrips}
-    onRemoveSavedTrip={removeSavedTrip}
-  />
-</div>
 
-<div className={view === "Data" ? "block" : "hidden"}>
-  <DataNotes />
-</div>
     </div>
   </main>
 );

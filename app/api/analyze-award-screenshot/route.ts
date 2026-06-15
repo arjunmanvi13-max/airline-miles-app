@@ -52,6 +52,9 @@ const airlineProgramMap: Record<string, string> = {
   Avianca: "LifeMiles®",
 
   "Aer Lingus": "AerClub Avios®",
+
+  "Atmos Rewards": "Mileage Plan",
+Atmos: "Mileage Plan",
 };
 
 const normalizeProgram = ({

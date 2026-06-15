@@ -10,10 +10,12 @@ export default function AirportAutocomplete({
   label,
   selectedAirport,
   onSelect,
+  disabled = false,
 }: {
   label: string;
   selectedAirport: string;
   onSelect: (code: string) => void;
+  disabled?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -101,20 +103,22 @@ export default function AirportAutocomplete({
 
       <input
   value={displayValue}
+  disabled={disabled}
   onFocus={() => {
-    setIsOpen(true);
-    setQuery("");
-  }}
+  if (disabled) return;
+  setIsOpen(true);
+  setQuery("");
+}}
   onChange={(e) => {
     setQuery(e.target.value);
     setIsOpen(true);
   }}
   placeholder={`Search ${label.toLowerCase()} airport`}
   style={{
-    backgroundColor: "#111111",
-    color: "white",
-  }}
-  className="w-full border border-white/10 px-4 py-4 text-sm placeholder:text-neutral-500 outline-none transition-all hover:border-white/20 focus:border-purple-300"
+  backgroundColor: disabled ? "#0B0B0B" : "#111111",
+  color: disabled ? "#94A3B8" : "white",
+}}
+  className="w-full border border-white/10 px-4 py-4 text-sm placeholder:text-neutral-500 outline-none transition-all hover:border-white/20 focus:border-purple-300 disabled:cursor-not-allowed disabled:opacity-60"
 />
 
       {isOpen && (

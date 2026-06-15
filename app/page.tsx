@@ -24,7 +24,7 @@ export default function LandingPage() {
             href="/app"
             className="border border-purple-300/40 bg-purple-500/10 px-5 py-3 text-sm font-semibold text-purple-100 transition hover:bg-purple-500/20"
           >
-            Open beta
+            Open App
           </Link>
         </nav>
 
@@ -64,7 +64,7 @@ export default function LandingPage() {
             </div>
 
             <p className="mt-4 max-w-xl text-xs leading-6 text-slate-500">
-              Private beta. Always verify award availability before transferring
+              Always verify award availability before transferring
               points. Transfers are often irreversible.
             </p>
           </div>

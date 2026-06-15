@@ -172,18 +172,77 @@ export async function POST(request: Request) {
 
     const offers = offersResponse.data || [];
 
-    if (offers.length === 0) {
-      return Response.json({
-        cashPrice: "",
-        source: "duffel_live_offers",
-        confidence: "none",
-        needsSelection: false,
-        cashOptions: [],
-        message: targetIsNonstop
-          ? "No nonstop Duffel cash offers found for this route/date."
-          : "No Duffel cash offers found for this route/date.",
+    if (offers.length === 0 && targetIsNonstop) {
+  const fallbackOfferRequest = await duffel.offerRequests.create({
+    slices: [
+      {
+        origin,
+        destination,
+        departure_date: departureDate,
+        departure_time: null,
+        arrival_time: null,
+      },
+    ],
+    passengers,
+    cabin_class: cabin,
+  });
+
+  const fallbackOffersResponse = await duffel.offers.list({
+    offer_request_id: fallbackOfferRequest.data.id,
+  });
+
+  const fallbackOffers = fallbackOffersResponse.data || [];
+
+  if (fallbackOffers.length > 0) {
+    const rankedFallbackOffers = [...fallbackOffers]
+      .map((offer: any) => ({
+        offer,
+        matchScore: scoreOffer({
+          offer,
+          targetAirline,
+          targetFlightNumber,
+          targetIsNonstop: false,
+        }),
+      }))
+      .sort((a: any, b: any) => {
+        if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+
+        return (
+          Number(a.offer.total_amount || 0) -
+          Number(b.offer.total_amount || 0)
+        );
       });
-    }
+
+    const cashOptions = rankedFallbackOffers
+      .slice(0, 8)
+      .map((item: any) => serializeOffer(item.offer, item.matchScore));
+
+    const selected = rankedFallbackOffers[0];
+    const serialized = serializeOffer(selected.offer, selected.matchScore);
+
+    return Response.json({
+      ...serialized,
+      source: "duffel_live_offers",
+      confidence: "fallback_comparable_with_connections",
+      needsSelection: false,
+      cashOptions,
+      liveMode: selected.offer.live_mode,
+      message:
+        "No nonstop cash fare found, so Vantara used the closest comparable Duffel fare.",
+    });
+  }
+}
+
+if (offers.length === 0) {
+  return Response.json({
+    cashPrice: "",
+    source: "duffel_live_offers",
+    confidence: "none",
+    needsSelection: false,
+    cashOptions: [],
+    message: "No Duffel cash offers found for this route/date.",
+  });
+}
 
     const rankedOffers = [...offers]
       .map((offer: any) => ({
