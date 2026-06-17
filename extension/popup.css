@@ -336,3 +336,36 @@ button:hover {
   font-size: 12px;
   line-height: 1.4;
 }
+
+.bookingBasicsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.passengerControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #111111;
+  padding: 4px;
+}
+
+.passengerControl button {
+  width: 42px;
+  margin: 0;
+  padding: 8px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+#passengerCount {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}

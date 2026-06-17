@@ -1,54 +1,20 @@
 const API_URL = "https://vantaratravel.net/api/extension-analyze";
 
 const AIRLINE_OPTIONS = [
-  "Alaska Airlines",
-  "American Airlines",
-  "Delta Air Lines",
-  "United Airlines",
-  "JetBlue",
-  "Southwest Airlines",
-  "Air Canada",
-  "Air France",
-  "KLM",
-  "British Airways",
-  "Iberia",
-  "Aer Lingus",
-  "Lufthansa",
-  "SWISS",
-  "Austrian Airlines",
-  "Turkish Airlines",
-  "Emirates",
-  "Qatar Airways",
-  "Etihad Airways",
-  "Singapore Airlines",
-  "Cathay Pacific",
-  "ANA",
-  "Japan Airlines",
-  "Virgin Atlantic",
-  "Qantas",
+  "Alaska Airlines", "American Airlines", "Delta Air Lines", "United Airlines",
+  "JetBlue", "Southwest Airlines", "Air Canada", "Air France", "KLM",
+  "British Airways", "Iberia", "Aer Lingus", "Lufthansa", "SWISS",
+  "Austrian Airlines", "Turkish Airlines", "Emirates", "Qatar Airways",
+  "Etihad Airways", "Singapore Airlines", "Cathay Pacific", "ANA",
+  "Japan Airlines", "Virgin Atlantic", "Qantas",
 ];
 
 const PROGRAM_OPTIONS = [
-  "Mileage Plan",
-  "AAdvantage",
-  "SkyMiles",
-  "MileagePlus",
-  "TrueBlue",
-  "Rapid Rewards",
-  "Aeroplan",
-  "Flying Blue",
-  "Executive Club Avios",
-  "Iberia Plus",
-  "AerClub Avios",
-  "LifeMiles",
-  "Skywards",
-  "Privilege Club Avios",
-  "Etihad Guest",
-  "KrisFlyer",
-  "Asia Miles",
-  "ANA Mileage Club",
-  "Virgin Atlantic Flying Club",
-  "Qantas Frequent Flyer",
+  "Mileage Plan", "AAdvantage", "SkyMiles", "MileagePlus", "TrueBlue",
+  "Rapid Rewards", "Aeroplan", "Flying Blue", "Executive Club Avios",
+  "Iberia Plus", "AerClub Avios", "LifeMiles", "Skywards",
+  "Privilege Club Avios", "Etihad Guest", "KrisFlyer", "Asia Miles",
+  "ANA Mileage Club", "Virgin Atlantic Flying Club", "Qantas Frequent Flyer",
 ];
 
 const AIRPORT_OPTIONS = [
@@ -67,6 +33,11 @@ const walletPreview = document.getElementById("walletPreview");
 const walletForm = document.getElementById("walletForm");
 const walletList = document.getElementById("walletList");
 const editWalletButton = document.getElementById("editWallet");
+
+const cabinInput = document.getElementById("cabin");
+const passengerCountText = document.getElementById("passengerCount");
+const decreasePassengersButton = document.getElementById("decreasePassengers");
+const increasePassengersButton = document.getElementById("increasePassengers");
 
 const screenshotInput = document.getElementById("screenshot");
 const fileLabel = document.getElementById("fileLabel");
@@ -104,22 +75,39 @@ if (airlineOptionsList && programOptionsList && airportOptionsList) {
 }
 
 let selectedFile = null;
-
 let latestAnalysisData = null;
 let latestSelectedCashOption = null;
-
 let savedWalletCards = [];
+let passengers = 1;
 
-chrome.storage.local.get(["wallet", "walletCards"], (data) => {
+chrome.storage.local.get(["wallet", "walletCards", "bookingBasics"], (data) => {
   if (Array.isArray(data.walletCards)) {
     savedWalletCards = data.walletCards;
   } else if (data.wallet?.card) {
     savedWalletCards = [data.wallet];
-  } else {
-    savedWalletCards = [];
   }
 
+  if (data.bookingBasics) {
+    cabinInput.value = data.bookingBasics.cabin || "Economy";
+    passengers = Math.max(1, Number(data.bookingBasics.passengers || 1));
+  }
+
+  updatePassengerDisplay();
   renderWallet();
+});
+
+cabinInput.addEventListener("change", saveBookingBasics);
+
+decreasePassengersButton.addEventListener("click", () => {
+  passengers = Math.max(1, passengers - 1);
+  updatePassengerDisplay();
+  saveBookingBasics();
+});
+
+increasePassengersButton.addEventListener("click", () => {
+  passengers += 1;
+  updatePassengerDisplay();
+  saveBookingBasics();
 });
 
 editWalletButton.addEventListener("click", () => {
@@ -166,22 +154,25 @@ screenshotInput.addEventListener("change", (event) => {
 
 analyzeButton.addEventListener("click", async () => {
   if (!selectedFile) {
-  statusText.textContent = "Choose a screenshot first.";
-  return;
-}
+    statusText.textContent = "Choose a screenshot first.";
+    return;
+  }
 
   analyzeButton.disabled = true;
   statusText.textContent = "Analyzing screenshot...";
   resultBox.classList.add("hidden");
+  overridePanel.classList.add("hidden");
   resultBox.innerHTML = "";
 
   try {
     const formData = new FormData();
-    formData.append("screenshot", selectedFile);
     const primaryWalletCard = getPrimaryWalletCard();
 
-formData.append("card", primaryWalletCard.card);
-formData.append("balance", primaryWalletCard.balance);
+    formData.append("screenshot", selectedFile);
+    formData.append("card", primaryWalletCard.card);
+    formData.append("balance", primaryWalletCard.balance);
+    formData.append("cabin", cabinInput.value);
+    formData.append("passengers", String(passengers));
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -190,18 +181,92 @@ formData.append("balance", primaryWalletCard.balance);
 
     const responseText = await response.text();
 
-let data;
-try {
-  data = JSON.parse(responseText);
-} catch {
-  throw new Error(responseText.slice(0, 120));
-}
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(responseText.slice(0, 120));
+    }
 
     if (!response.ok) {
       throw new Error(data.error || "Analyzer request failed.");
     }
 
+    data.cabin = data.cabin || cabinInput.value;
+    data.passengers = passengers;
+
+    latestAnalysisData = data;
+    latestSelectedCashOption = null;
+    populateOverridePanel(data);
+
+    if (data.needsMilesSelection && data.mileOptions?.length) {
+  resultBox.innerHTML = `
+    <div class="missingBox">
+      <p class="kicker">Award fare selection</p>
+      <p class="missingTitle">
+        Multiple mileage prices were detected.
+      </p>
+
+      <div class="flightOptions">
+        ${data.mileOptions
+          .map(
+            (miles) => `
+              <button
+                class="flightOption mileOption"
+                data-miles="${miles}"
+              >
+                <strong>${formatNumber(miles)} miles</strong>
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  resultBox.classList.remove("hidden");
+
+  document.querySelectorAll(".mileOption").forEach((button) => {
+    button.addEventListener("click", () => {
+      data.miles = Number(button.dataset.miles);
+
+      recalculateClientSide(data);
+
+      latestAnalysisData = data;
+
+      resultBox.innerHTML = buildResultHtml(
+        data,
+        latestSelectedCashOption
+      );
+    });
+  });
+
+  statusText.textContent =
+    "Select the mileage price you want analyzed.";
+
+  analyzeButton.disabled = false;
+
+  return;
+}
+
     if (data.cashLookup?.needsSelection && data.cashLookup?.cashOptions?.length) {
+      showCashFlightSelection(data);
+    } else {
+      resultBox.innerHTML = buildResultHtml(data, null);
+      resultBox.classList.remove("hidden");
+    }
+
+    overridePanel.classList.remove("hidden");
+    statusText.textContent = "Done.";
+  } catch (error) {
+    console.error(error);
+    statusText.textContent = error.message || "Something went wrong.";
+  } finally {
+    analyzeButton.disabled = false;
+  }
+});
+
+function showCashFlightSelection(data) {
   resultBox.innerHTML = `
     <strong>Select matching cash flight</strong>
     <p>Duffel found multiple comparable cash fares. Pick the flight that matches your screenshot.</p>
@@ -230,62 +295,41 @@ try {
       const selectedOption = data.cashLookup.cashOptions[selectedIndex];
 
       data.cashPrice = Number(selectedOption.cashPrice);
-      data.centsPerPoint =
-        data.cashPrice > 0 && data.miles > 0
-          ? ((data.cashPrice - data.taxes) / data.miles) * 100
-          : null;
+      recalculateClientSide(data);
 
-      data.redemptionScore = getSimpleRedemptionScore({
-        miles: data.miles,
-        taxes: data.taxes,
-        cashPrice: data.cashPrice,
-        cabin: data.cabin,
-      });
+      latestAnalysisData = data;
+      latestSelectedCashOption = selectedOption;
+      populateOverridePanel(data);
 
-      data.redemptionLabel =
-  data.redemptionScore !== null
-    ? getSimpleRedemptionLabel(data.redemptionScore)
-    : null;
-
-data.bookingDecision = getSimpleBookingDecision({
-  redemptionScore: data.redemptionScore,
-  canBook: data.wallet?.canBook,
-  centsPerPoint: data.centsPerPoint,
-});
-
-latestAnalysisData = data;
-latestSelectedCashOption = selectedOption;
-populateOverridePanel(data);
-const needsOverride =
-  !data.origin ||
-  !data.destination ||
-  !data.departureDate ||
-  !data.miles ||
-  !data.airline;
-
-if (needsOverride) {
-  overridePanel.classList.remove("hidden");
-}
-resultBox.innerHTML = buildResultHtml(data, selectedOption);
+      resultBox.innerHTML = buildResultHtml(data, selectedOption);
     });
   });
-} else {
-  resultBox.innerHTML = buildResultHtml(data, null);
 }
-    latestAnalysisData = data;
-latestSelectedCashOption = null;
-populateOverridePanel(data);
-overridePanel.classList.remove("hidden");
 
-    resultBox.classList.remove("hidden");
-    statusText.textContent = "Done.";
-  } catch (error) {
-    console.error(error);
-    statusText.textContent = error.message || "Something went wrong.";
-  } finally {
-    analyzeButton.disabled = false;
-  }
-});
+function recalculateClientSide(data) {
+  data.centsPerPoint =
+    data.cashPrice > 0 && data.miles > 0
+      ? ((data.cashPrice - data.taxes) / data.miles) * 100
+      : null;
+
+  data.redemptionScore = getSimpleRedemptionScore({
+    miles: data.miles,
+    taxes: data.taxes,
+    cashPrice: data.cashPrice,
+    cabin: data.cabin || cabinInput.value,
+  });
+
+  data.redemptionLabel =
+    data.redemptionScore !== null
+      ? getSimpleRedemptionLabel(data.redemptionScore)
+      : null;
+
+  data.bookingDecision = getSimpleBookingDecision({
+    redemptionScore: data.redemptionScore,
+    canBook: data.wallet?.canBook,
+    centsPerPoint: data.centsPerPoint,
+  });
+}
 
 function formatNumber(value) {
   const number = Number(String(value || "").replace(/,/g, ""));
@@ -313,6 +357,7 @@ function formatDate(value) {
     year: "numeric",
   });
 }
+
 function getMissingFields(data) {
   const missing = [];
 
@@ -393,9 +438,9 @@ function buildResultHtml(data, selectedCashOption) {
 
       <div class="metric">
         <p class="metricLabel">Bookability</p>
-<p class="metricValue">${
-  data.wallet?.canBook ? "Valid" : "Not ready"
-}</p>
+        <p class="metricValue">${
+          data.wallet?.canBook ? "Valid" : "Not ready"
+        }</p>
       </div>
     </div>
 
@@ -414,7 +459,7 @@ function buildResultHtml(data, selectedCashOption) {
       <p>${
         data.wallet?.balance !== null && data.wallet?.balance !== undefined
           ? data.wallet.canBook
-           ? "Your wallet can cover this booking path."
+            ? "Your wallet can cover this booking path."
             : `Your wallet is short by ${formatNumber(data.wallet.shortage)} points.`
           : "Balance not entered."
       }</p>
@@ -428,6 +473,8 @@ function buildResultHtml(data, selectedCashOption) {
       <p><strong>Date:</strong> ${formatDate(data.departureDate) || "Unknown"}</p>
       <p><strong>Airline:</strong> ${data.airline || "Unknown"}</p>
       <p><strong>Program:</strong> ${data.program || "Unknown"}</p>
+      <p><strong>Cabin:</strong> ${data.cabin}</p>
+      <p><strong>Passengers:</strong> ${data.passengers}</p>
       <p><strong>Miles:</strong> ${formatNumber(data.miles) || "Unknown"}</p>
       <p><strong>Taxes:</strong> ${formatMoney(data.taxes) || "Unknown"}</p>
       ${
@@ -464,8 +511,8 @@ function getSimpleRedemptionScore({ miles, taxes, cashPrice, cabin }) {
   else if (cpp >= 2.0) score = 74;
   else if (cpp >= 1.7) score = 68;
   else if (cpp >= 1.5) score = 60;
-else if (cpp >= 1.2) score = 45;
-else if (cpp >= 0.9) score = 32;
+  else if (cpp >= 1.2) score = 45;
+  else if (cpp >= 0.9) score = 32;
   else score = 20;
 
   if (cabin === "Premium Economy") score += 3;
@@ -604,19 +651,19 @@ function getPrimaryWalletCard() {
 }
 
 function populateOverridePanel(data) {
+  if (
+    !overrideAirline ||
+    !overrideProgram ||
+    !overrideOrigin ||
+    !overrideDestination ||
+    !overrideDate ||
+    !overrideMiles ||
+    !overrideTaxes ||
+    !overrideCashPrice
+  ) {
+    return;
+  }
 
-    if (
-  !overrideAirline ||
-  !overrideProgram ||
-  !overrideOrigin ||
-  !overrideDestination ||
-  !overrideDate ||
-  !overrideMiles ||
-  !overrideTaxes ||
-  !overrideCashPrice
-) {
-  return;
-}
   overrideAirline.value = data.airline || "";
   overrideProgram.value = data.program || "";
   overrideOrigin.value = data.origin || "";
@@ -624,57 +671,52 @@ function populateOverridePanel(data) {
   overrideDate.value = data.departureDate || "";
   overrideMiles.value = data.miles || "";
   overrideTaxes.value = data.taxes || "";
-overrideCashPrice.value = data.cashPrice || "";
-overrideTaxes.placeholder = data.taxes ? "Ex: 5.60" : "Ex: 5.60";
-overrideCashPrice.placeholder = data.cashPrice
-  ? "Ex: 118.52"
-  : "Cash fare not found";
+  overrideCashPrice.value = data.cashPrice || "";
+  overrideTaxes.placeholder = "Ex: 5.60";
+  overrideCashPrice.placeholder = data.cashPrice
+    ? "Ex: 118.52"
+    : "Cash fare not found";
 }
 
 if (recalculateOverrideButton) {
   recalculateOverrideButton.addEventListener("click", () => {
-  if (!latestAnalysisData) return;
+    if (!latestAnalysisData) return;
 
-  const updated = {
-    ...latestAnalysisData,
-    airline: overrideAirline.value,
-    program: overrideProgram.value,
-    origin: overrideOrigin.value.toUpperCase(),
-    destination: overrideDestination.value.toUpperCase(),
-    departureDate: normalizeOverrideDate(overrideDate.value),
-    miles: Number(String(overrideMiles.value || "").replace(/,/g, "")),
-    taxes: Number(String(overrideTaxes.value || "").replace(/[$,]/g, "")),
-    cashPrice: Number(String(overrideCashPrice.value || "").replace(/[$,]/g, "")),
-  };
+    const updated = {
+      ...latestAnalysisData,
+      airline: overrideAirline.value,
+      program: overrideProgram.value,
+      origin: overrideOrigin.value.toUpperCase(),
+      destination: overrideDestination.value.toUpperCase(),
+      departureDate: normalizeOverrideDate(overrideDate.value),
+      miles: Number(String(overrideMiles.value || "").replace(/,/g, "")),
+      taxes: Number(String(overrideTaxes.value || "").replace(/[$,]/g, "")),
+      cashPrice: Number(String(overrideCashPrice.value || "").replace(/[$,]/g, "")),
+      cabin: cabinInput.value,
+      passengers,
+    };
 
-  updated.centsPerPoint =
-    updated.cashPrice > 0 && updated.miles > 0
-      ? ((updated.cashPrice - updated.taxes) / updated.miles) * 100
-      : null;
+    recalculateClientSide(updated);
 
-  updated.redemptionScore = getSimpleRedemptionScore({
-    miles: updated.miles,
-    taxes: updated.taxes,
-    cashPrice: updated.cashPrice,
-    cabin: updated.cabin,
+    latestAnalysisData = updated;
+    resultBox.innerHTML = buildResultHtml(updated, latestSelectedCashOption);
+    statusText.textContent = "Updated with overrides.";
   });
-
-  updated.redemptionLabel =
-    updated.redemptionScore !== null
-      ? getSimpleRedemptionLabel(updated.redemptionScore)
-      : null;
-
-  updated.bookingDecision = getSimpleBookingDecision({
-    redemptionScore: updated.redemptionScore,
-    canBook: updated.wallet?.canBook,
-    centsPerPoint: updated.centsPerPoint,
-  });
-
-  latestAnalysisData = updated;
-  resultBox.innerHTML = buildResultHtml(updated, latestSelectedCashOption);
-  statusText.textContent = "Updated with overrides.";
-});
 }
+
 function normalizeOverrideDate(value) {
   return value || "";
+}
+
+function updatePassengerDisplay() {
+  passengerCountText.textContent = String(passengers);
+}
+
+function saveBookingBasics() {
+  chrome.storage.local.set({
+    bookingBasics: {
+      cabin: cabinInput.value,
+      passengers,
+    },
+  });
 }

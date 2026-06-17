@@ -1,3 +1,5 @@
+
+
 import {
   getBookingDecision,
   getRedemptionLabel,
@@ -10,6 +12,19 @@ import {
 } from "../../logic";
 
 export const runtime = "nodejs";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
 
 
 
@@ -27,12 +42,20 @@ export async function POST(request: Request) {
     const card = String(incomingFormData.get("card") || "Amex");
     const balance = String(incomingFormData.get("balance") || "");
 
+    const userCabin = String(
+  incomingFormData.get("cabin") || ""
+);
+
+const userPassengers = Number(
+  incomingFormData.get("passengers") || 1
+);
+
     if (!(screenshot instanceof File)) {
-      return Response.json(
-        { error: "No screenshot uploaded." },
-        { status: 400 }
-      );
-    }
+  return Response.json(
+    { error: "No screenshot uploaded." },
+    { status: 400, headers: corsHeaders }
+  );
+}
 
     const extractionFormData = new FormData();
     extractionFormData.append("screenshot", screenshot);
@@ -48,28 +71,25 @@ export async function POST(request: Request) {
     const extracted = await extractionResponse.json();
 
     if (!extractionResponse.ok) {
-      return Response.json(extracted, { status: extractionResponse.status });
+      return Response.json(extracted, {
+  status: extractionResponse.status,
+  headers: corsHeaders,
+});
     }
 
     const miles = parseNumber(extracted.miles);
 const taxes = parseNumber(extracted.taxes);
-const cabin = extracted.cabin || "Economy";
+const cabin =
+  extracted.cabin ||
+  userCabin ||
+  "Economy";
 
 let cashPrice = parseNumber(extracted.cashPrice);
 let cashLookup = null;
 
 if (!cashPrice && extracted.origin && extracted.destination && extracted.departureDate) {
 
-  console.log("DUFFEL REQUEST FROM EXTENSION:", {
-  origin: extracted.origin,
-  destination: extracted.destination,
-  departureDate: extracted.departureDate,
-  cabin,
-  passengers: extracted.passengers || 1,
-  airline: extracted.airline || "",
-  flightNumber: extracted.flightNumber || "",
-  isNonstop: Boolean(extracted.isNonstop),
-});
+  
   const cashResponse = await fetch(
     new URL("/api/duffel-cash-price", request.url),
     {
@@ -82,7 +102,10 @@ if (!cashPrice && extracted.origin && extracted.destination && extracted.departu
         destination: extracted.destination,
         departureDate: extracted.departureDate,
         cabin,
-        passengers: extracted.passengers || 1,
+        passengers:
+  extracted.passengers ||
+  userPassengers ||
+  1,
         airline: extracted.airline || "",
         flightNumber: extracted.flightNumber || "",
         isNonstop: Boolean(extracted.isNonstop),
@@ -93,7 +116,7 @@ if (!cashPrice && extracted.origin && extracted.destination && extracted.departu
   const cashData = await cashResponse.json();
 
   cashLookup = cashData;
-  console.log("EXTENSION CASH LOOKUP:", cashData);
+
 
   if (cashResponse.ok && cashData.cashPrice) {
     cashPrice = parseNumber(cashData.cashPrice);
@@ -172,47 +195,57 @@ if (!cashPrice && extracted.origin && extracted.destination && extracted.departu
       centsPerPoint,
     });
 
-    return Response.json({
-      ...extracted,
+    return Response.json(
+  {
+    ...extracted,
+    cabin,
+    passengers: extracted.passengers || userPassengers || 1,
+    miles,
+    taxes,
+    cashPrice,
+    centsPerPoint,
+    redemptionScore,
+    redemptionLabel:
+      redemptionScore !== null ? getRedemptionLabel(redemptionScore) : null,
+    redemptionReasons: getRedemptionReasons({
       miles,
       taxes,
       cashPrice,
-      centsPerPoint,
-      redemptionScore,
-      redemptionLabel:
-        redemptionScore !== null ? getRedemptionLabel(redemptionScore) : null,
-      redemptionReasons: getRedemptionReasons({
-  miles,
-  taxes,
-  cashPrice,
-  cabin,
-}),
-cashLookup,
-      wallet: {
-        card,
-        balance: balanceNumber,
-        requiredPoints,
-        canBook,
-        shortage,
-        fitScore: walletFitScore,
-        fitLabel: getWalletFitLabel(walletFitScore),
-      },
-      transfer: bestOption
-        ? {
-            card: bestOption.card,
-            program: bestOption.program,
-            requiredCardPoints: bestOption.requiredCardPoints,
-            bonusPercent: bestOption.bonusPercent,
-          }
-        : null,
-      bookingDecision,
-    });
-  } catch (error) {
+      cabin,
+    }),
+    cashLookup,
+    wallet: {
+      card,
+      balance: balanceNumber,
+      requiredPoints,
+      canBook,
+      shortage,
+      fitScore: walletFitScore,
+      fitLabel: getWalletFitLabel(walletFitScore),
+    },
+    transfer: bestOption
+      ? {
+          card: bestOption.card,
+          program: bestOption.program,
+          requiredCardPoints: bestOption.requiredCardPoints,
+          bonusPercent: bestOption.bonusPercent,
+        }
+      : null,
+    bookingDecision,
+  },
+  {
+    headers: corsHeaders,
+  }
+);
+    } catch (error) {
     console.error("Extension analysis failed:", error);
 
     const message =
       error instanceof Error ? error.message : "Extension analysis failed.";
 
-    return Response.json({ error: message }, { status: 500 });
+    return Response.json(
+      { error: message },
+      { status: 500, headers: corsHeaders }
+    );
   }
 }

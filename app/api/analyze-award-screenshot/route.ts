@@ -9,6 +9,8 @@ const client = new OpenAI({
 const airlineProgramMap: Record<string, string> = {
   "Alaska Airlines": "Mileage Plan",
   Alaska: "Mileage Plan",
+  "Atmos Rewards": "Mileage Plan",
+  Atmos: "Mileage Plan",
 
   "American Airlines": "AAdvantage",
   American: "AAdvantage",
@@ -52,9 +54,38 @@ const airlineProgramMap: Record<string, string> = {
   Avianca: "LifeMiles®",
 
   "Aer Lingus": "AerClub Avios®",
+};
 
-  "Atmos Rewards": "Mileage Plan",
-Atmos: "Mileage Plan",
+const airlineAliases: Record<string, string> = {
+  B6: "JetBlue",
+  AS: "Alaska Airlines",
+  AA: "American Airlines",
+  UA: "United Airlines",
+  DL: "Delta Air Lines",
+  WN: "Southwest Airlines",
+  BA: "British Airways",
+  VS: "Virgin Atlantic",
+  AC: "Air Canada",
+  QR: "Qatar Airways",
+  EK: "Emirates",
+  TK: "Turkish Airlines",
+  SQ: "Singapore Airlines",
+  CX: "Cathay Pacific",
+};
+
+const normalizeAirline = (value: unknown, flightNumber: unknown) => {
+  const rawAirline = String(value || "").trim();
+
+  if (rawAirline) return rawAirline;
+
+  const rawFlightNumber = String(flightNumber || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s/g, "");
+
+  const prefix = rawFlightNumber.match(/^[A-Z]{2}/)?.[0];
+
+  return prefix && airlineAliases[prefix] ? airlineAliases[prefix] : "";
 };
 
 const normalizeProgram = ({
@@ -67,8 +98,6 @@ const normalizeProgram = ({
   const trimmedAirline = airline.trim();
   const trimmedProgram = program.trim();
 
-  if (!trimmedAirline) return trimmedProgram;
-
   const mappedProgram = airlineProgramMap[trimmedAirline];
 
   if (!trimmedProgram) {
@@ -77,7 +106,9 @@ const normalizeProgram = ({
 
   if (
     trimmedProgram.toLowerCase() === trimmedAirline.toLowerCase() ||
-    trimmedProgram.toLowerCase().includes("airlines")
+    trimmedProgram.toLowerCase().includes("airlines") ||
+    trimmedProgram.toLowerCase() === "atmos rewards" ||
+    trimmedProgram.toLowerCase() === "atmos"
   ) {
     return mappedProgram || trimmedProgram;
   }
@@ -134,6 +165,22 @@ const normalizeDate = (value: unknown) => {
   return "";
 };
 
+const normalizeDigitsOnly = (value: unknown) => {
+  return String(value || "").replace(/[^\d.]/g, "");
+};
+
+const normalizeMileOptions = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+
+  return Array.from(
+    new Set(
+      value
+        .map((item) => normalizeDigitsOnly(item).replace(/\./g, ""))
+        .filter(Boolean)
+    )
+  );
+};
+
 export async function POST(request: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -158,15 +205,50 @@ export async function POST(request: Request) {
     const mimeType = file.type || "image/png";
 
     const response = await client.responses.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-5",
       input: [
         {
           role: "user",
           content: [
             {
               type: "input_text",
-              text:
-                "Extract award flight details from this screenshot. Return ONLY valid JSON with these keys: airline, program, origin, destination, departureDate, route, cabin, miles, taxes, cashPrice, flightNumber, departureTime, arrivalTime, isNonstop, passengers. airline should be the operating airline or award airline. program should be the loyalty program used for booking, not the airline name. origin and destination should be 3-letter IATA airport codes whenever visible. departureDate should be YYYY-MM-DD if visible or inferable from the screenshot; otherwise use an empty string. route should be formatted like ORIGIN → DESTINATION if possible. flightNumber should be the visible flight number like AS640, BA1511, UA934, VS26, etc. if present. departureTime and arrivalTime should be visible flight times if present. isNonstop should be true if the screenshot says Direct, Nonstop, nonstop, or clearly shows no stops. isNonstop should be false if it clearly shows one or more stops. Examples: Alaska Airlines -> Mileage Plan, United Airlines -> MileagePlus, American Airlines -> AAdvantage, Delta Air Lines -> SkyMiles, Virgin Atlantic -> Flying Club, Air Canada -> Aeroplan. Use empty strings for missing text fields. miles should be digits only if visible. taxes and cashPrice should be numbers as strings if visible. IMPORTANT: do not treat seat availability like '9 seats' as passengers. passengers should always be an empty string unless the screenshot clearly says traveler/passenger count. departureDate should be YYYY-MM-DD. If the screenshot shows a date like 7/14 and no year, assume 2026. For US-style flight screenshots, interpret 7/14 as July 14, not day/month.",
+              text: `
+Extract award flight details from this screenshot.
+
+Return ONLY valid JSON with these keys:
+airline, program, origin, destination, departureDate, route, cabin, miles, taxes, cashPrice, flightNumber, departureTime, arrivalTime, isNonstop, passengers, needsMilesSelection, mileOptions.
+
+Rules:
+- airline should be the operating airline or award airline.
+- If the airline name is not written, use visible airline logos, aircraft branding, flight number prefix, or route context to infer the airline when reasonably clear.
+- program should be the loyalty program used for booking, not the airline name.
+- origin and destination should be 3-letter IATA airport codes whenever visible.
+- departureDate should be YYYY-MM-DD if visible or inferable; otherwise use an empty string.
+- If the screenshot shows a date like 7/14 and no year, assume 2026.
+- For US-style screenshots, interpret 7/14 as July 14, not day/month.
+- route should be formatted like ORIGIN → DESTINATION if possible.
+- flightNumber should be the visible flight number like AS640, B6626, BA1511, UA934, VS26, etc. if present.
+- departureTime and arrivalTime should be visible flight times if present.
+- isNonstop should be true if the screenshot says Direct, Nonstop, nonstop, or clearly shows no stops.
+- isNonstop should be false if it clearly shows one or more stops.
+- miles should be digits only if visible.
+- If the screenshot shows multiple possible mileage prices for the same itinerary or multiple award fare options and it is unclear which one the user means, set needsMilesSelection to true, put possible mileage prices as digit-only strings in mileOptions, and set miles to the lowest visible relevant mileage price.
+- If there is only one clear award price, set needsMilesSelection to false and mileOptions to an empty array.
+- taxes and cashPrice should be numbers as strings if visible.
+- Do not treat seat availability like "9 seats" as passengers.
+- passengers should be an empty string unless the screenshot clearly says traveler/passenger count.
+
+Examples:
+- Alaska Airlines or Atmos Rewards -> Mileage Plan
+- United Airlines -> MileagePlus
+- American Airlines -> AAdvantage
+- Delta Air Lines -> SkyMiles
+- JetBlue -> TrueBlue
+- Virgin Atlantic -> Flying Club
+- Air Canada -> Aeroplan
+
+Use empty strings for missing text fields.
+              `.trim(),
             },
             {
               type: "input_image",
@@ -188,7 +270,9 @@ export async function POST(request: Request) {
 
     const parsed = JSON.parse(cleaned);
 
-    const airline = parsed.airline || "";
+    const flightNumber = parsed.flightNumber || "";
+    const airline = normalizeAirline(parsed.airline, flightNumber);
+
     const program = normalizeProgram({
       airline,
       program: parsed.program || "",
@@ -210,14 +294,16 @@ export async function POST(request: Request) {
       departureDate,
       route,
       cabin: parsed.cabin || "",
-      miles: parsed.miles || "",
-      taxes: parsed.taxes || "",
-      cashPrice: parsed.cashPrice || "",
-      flightNumber: parsed.flightNumber || "",
+      miles: normalizeDigitsOnly(parsed.miles).replace(/\./g, ""),
+      taxes: normalizeDigitsOnly(parsed.taxes),
+      cashPrice: normalizeDigitsOnly(parsed.cashPrice),
+      flightNumber,
       departureTime: parsed.departureTime || "",
       arrivalTime: parsed.arrivalTime || "",
       isNonstop: Boolean(parsed.isNonstop),
-      passengers: "",
+      passengers: parsed.passengers || "",
+      needsMilesSelection: Boolean(parsed.needsMilesSelection),
+      mileOptions: normalizeMileOptions(parsed.mileOptions),
     });
   } catch (error) {
     console.error("Award screenshot analysis failed:", error);
