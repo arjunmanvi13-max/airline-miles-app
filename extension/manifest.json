@@ -8,7 +8,15 @@
     "default_title": "Vantara"
   },
   "permissions": ["storage"],
-"host_permissions": [
-  "https://vantaratravel.net/*"
-]
+  "host_permissions": [
+    "https://vantaratravel.net/*",
+    "https://seats.aero/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://seats.aero/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }
