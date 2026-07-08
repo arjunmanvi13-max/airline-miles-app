@@ -12,14 +12,14 @@
         <p class="eyebrow">Award travel intelligence</p>
         <h1>Vantara</h1>
         <p class="subtitle">
-          Analyze an award flight before you transfer points.
+          Start by adding your transferable points wallet. Then open Seats.aero and click ✦ Analyze on any expanded award card.
         </p>
       </header>
 
       <section class="card walletCard">
         <div class="sectionHeader">
           <div>
-            <h2>Wallet</h2>
+            <h2>Your Award Wallet</h2>
             <p id="walletPreview" class="walletPreview">No wallet saved yet</p>
           </div>
 
@@ -32,147 +32,33 @@
 
         <div id="walletForm" class="walletForm hidden">
           <label>
-            Card
+            Transferable program
             <select id="card">
-              <option value="Amex">Amex</option>
-              <option value="Chase">Chase</option>
-              <option value="Capital One">Capital One</option>
-              <option value="Bilt">Bilt</option>
-              <option value="Citi">Citi</option>
-              <option value="Wells Fargo">Wells Fargo</option>
+              <option value="Amex">Amex Membership Rewards</option>
+              <option value="Chase">Chase Ultimate Rewards</option>
+              <option value="Capital One">Capital One Miles</option>
+              <option value="Bilt">Bilt Rewards</option>
+              <option value="Citi">Citi ThankYou Points</option>
+              <option value="Wells Fargo">Wells Fargo Rewards</option>
             </select>
           </label>
 
           <label>
-            Balance
+            Current balance optional
             <input id="balance" placeholder="ex: 120000" />
           </label>
 
-          <button id="saveWallet">Add card to wallet</button>
+          <button id="saveWallet" type="button">Save wallet source</button>
           <p id="walletStatus" class="status"></p>
         </div>
       </section>
 
-      <section class="card bookingBasicsCard">
-        <div class="sectionHeader">
-          <div>
-            <h2>Booking basics</h2>
-            <p class="walletPreview">
-              These are controlled by you, not guessed from the screenshot.
-            </p>
-          </div>
-        </div>
-
-        <div class="bookingBasicsGrid">
-          <label>
-            Cabin
-            <select id="cabin">
-              <option value="Economy">Economy</option>
-              <option value="Premium Economy">Premium Economy</option>
-              <option value="Business">Business</option>
-              <option value="First">First</option>
-            </select>
-          </label>
-
-          <label>
-            Passengers
-            <div class="passengerControl">
-              <button id="decreasePassengers" type="button">−</button>
-              <span id="passengerCount">1</span>
-              <button id="increasePassengers" type="button">+</button>
-            </div>
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Screenshot</h2>
-
-        <label class="uploadBox">
-          <span id="fileLabel">Choose screenshot</span>
-          <small>
-            Best results include route, date, miles, taxes, and flight details.
-          </small>
-          <input id="screenshot" type="file" accept="image/*" />
-        </label>
-
-        <button id="analyze">Analyze redemption</button>
-        <p id="status" class="status"></p>
-      </section>
-
-      <section id="result" class="result hidden"></section>
-
-      <section id="overridePanel" class="card hidden">
-        <div class="sectionHeader">
-          <div>
-            <h2>Review details</h2>
-            <p class="walletPreview">
-              Override anything Vantara extracted incorrectly.
-            </p>
-          </div>
-        </div>
-
-        <div class="overrideGrid">
-          <label>
-            Airline
-            <input
-              id="overrideAirline"
-              list="airlineOptions"
-              placeholder="Search airline"
-            />
-          </label>
-
-          <label>
-            Program
-            <input
-              id="overrideProgram"
-              list="programOptions"
-              placeholder="Search program"
-            />
-          </label>
-
-          <label>
-            From
-            <input id="overrideOrigin" list="airportOptions" placeholder="TPA" />
-          </label>
-
-          <label>
-            To
-            <input
-              id="overrideDestination"
-              list="airportOptions"
-              placeholder="JFK"
-            />
-          </label>
-
-          <label>
-            Date
-            <input id="overrideDate" type="date" />
-          </label>
-
-          <label>
-            Miles
-            <input id="overrideMiles" placeholder="Ex: 10300" />
-          </label>
-
-          <label>
-            Taxes
-            <input id="overrideTaxes" placeholder="Ex: 5.60" />
-          </label>
-
-          <label>
-            Cash fare
-            <input id="overrideCashPrice" placeholder="Cash fare not found" />
-          </label>
-        </div>
-
-        <button id="recalculateOverride" type="button">
-          Recalculate with overrides
-        </button>
-
-        <datalist id="airlineOptions"></datalist>
-        <datalist id="programOptions"></datalist>
-        <datalist id="airportOptions"></datalist>
+      <section class="card readyCard">
+        <p class="kicker">Ready</p>
+        <h2>Analyze awards on Seats.aero</h2>
+        <p class="readyText">
+          First, build your wallet above. Then open Seats.aero, click the info button on an award result, and press ✦ Vantara inside the expanded card.
+        </p>
       </section>
     </main>
 

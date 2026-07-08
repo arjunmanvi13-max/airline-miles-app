@@ -23,20 +23,79 @@ const AIRLINE_BY_CODE = {
   QF: "Qantas",
 };
 
+function addOpenCardHint(card) {
+  if (card.querySelector(".vantara-open-hint")) return;
+  if (card.querySelector(`.${VANTARA_CARD_BUTTON_CLASS}`)) return;
+
+  const infoButton = card.querySelector('button, [role="button"]');
+  const actions = card.querySelector(".trip-actions");
+
+  if (actions) return;
+
+  const hint = document.createElement("div");
+  hint.className = "vantara-open-hint";
+  hint.textContent = "Open card to analyze with Vantara";
+
+  hint.style.position = "absolute";
+  hint.style.right = "12px";
+  hint.style.top = "50%";
+  hint.style.transform = "translateY(-50%)";
+  hint.style.border = "1px solid rgba(216, 180, 254, 0.45)";
+  hint.style.background = "rgba(88, 28, 135, 0.35)";
+  hint.style.color = "#f3e8ff";
+  hint.style.padding = "7px 10px";
+  hint.style.borderRadius = "999px";
+  hint.style.fontSize = "12px";
+  hint.style.fontWeight = "800";
+  hint.style.pointerEvents = "none";
+  hint.style.whiteSpace = "nowrap";
+
+  card.style.position = "relative";
+  card.appendChild(hint);
+}
+
+function addSummaryRowHints() {
+  document.querySelectorAll("tbody tr").forEach((row) => {
+    if (row.querySelector(".vantara-summary-hint")) return;
+
+    const infoButton = row.querySelector("button");
+    if (!infoButton) return;
+
+    const lastCell = row.querySelector("td:last-child");
+    if (!lastCell) return;
+
+    const hint = document.createElement("div");
+    hint.className = "vantara-summary-hint";
+    hint.textContent = "Open card to analyze";
+
+    hint.style.marginTop = "6px";
+    hint.style.color = "#d8b4fe";
+    hint.style.fontSize = "11px";
+    hint.style.fontWeight = "800";
+    hint.style.whiteSpace = "nowrap";
+    hint.style.textAlign = "center";
+
+    lastCell.appendChild(hint);
+  });
+}
+
 function addButtonsToTripCards() {
   document.querySelectorAll(".trip-card").forEach((card) => {
+    addOpenCardHint(card);
     if (card.querySelector(`.${VANTARA_CARD_BUTTON_CLASS}`)) return;
 
-    const actions = card.querySelector(".trip-actions") || card;
-    const button = document.createElement("button");
+    const actions = card.querySelector(".trip-actions");
+    if (!actions) return;
 
+    const button = document.createElement("button");
     button.className = VANTARA_CARD_BUTTON_CLASS;
-    button.textContent = "Analyze";
+    button.type = "button";
+    button.textContent = "✦ Vantara";
 
     button.style.border = "1px solid rgba(216, 180, 254, 0.65)";
-    button.style.background = "linear-gradient(135deg, #2a1248, #5b21b6)";
+    button.style.background = "rgba(88, 28, 135, 0.92)";
     button.style.color = "white";
-    button.style.padding = "7px 10px";
+    button.style.padding = "7px 11px";
     button.style.borderRadius = "8px";
     button.style.fontWeight = "800";
     button.style.fontSize = "13px";
@@ -50,6 +109,7 @@ function addButtonsToTripCards() {
 
       const award = extractSeatsAeroAward(card);
       openVantaraPanel(award);
+      analyzeStructuredAward(award);
     });
 
     actions.appendChild(button);
@@ -312,31 +372,32 @@ function openVantaraPanel(award) {
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
         <p style="margin:0;color:#d8b4fe;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;">Vantara</p>
-        <h2 style="margin:8px 0 4px;font-size:22px;color:white;">Analyze this award</h2>
-        <p style="margin:0;color:#94a3b8;font-size:13px;line-height:1.45;">Structured Seats.aero data detected.</p>
+        <h2 style="margin:8px 0 4px;font-size:22px;color:white;">Analyzing award</h2>
+        <p style="margin:0;color:#94a3b8;font-size:13px;line-height:1.45;">
+          ${escapeHtml(award.origin || "?")} → ${escapeHtml(award.destination || "?")} · ${escapeHtml(award.miles ? Number(award.miles).toLocaleString() + " miles" : "Miles unknown")}
+        </p>
       </div>
+
       <button id="vantara-close-panel" style="border:1px solid rgba(255,255,255,0.12);background:#111;color:white;padding:6px 9px;border-radius:8px;cursor:pointer;">×</button>
     </div>
 
-    <div id="vantara-panel-content">
-      ${buildDetectedAwardHtml(award)}
+    <div id="vantara-panel-content" style="margin-top:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;">
+      <p style="margin:0 0 8px;color:#c084fc;font-size:10px;letter-spacing:0.24em;text-transform:uppercase;">Working</p>
+      <h3 style="margin:0;color:white;font-size:22px;">Finding cash fare...</h3>
+      <p style="margin:10px 0 0;color:#cbd5e1;font-size:13px;line-height:1.45;">
+        Vantara is comparing this award against live cash pricing and your wallet.
+      </p>
     </div>
 
-    <button id="vantara-analyze-award" style="width:100%;margin-top:14px;border:1px solid rgba(216,180,254,0.45);background:rgba(168,85,247,0.22);color:#f3e8ff;padding:12px;border-radius:12px;font-weight:800;cursor:pointer;">
-      Analyze redemption
-    </button>
-
-    <p id="vantara-panel-status" style="margin:10px 0 0;color:#94a3b8;font-size:12px;">Ready to analyze this selected Seats.aero award.</p>
+    <p id="vantara-panel-status" style="margin:10px 0 0;color:#94a3b8;font-size:12px;">
+      Reading selected Seats.aero award...
+    </p>
   `;
 
   document.body.appendChild(panel);
 
   document.getElementById("vantara-close-panel").addEventListener("click", () => {
     panel.remove();
-  });
-
-  document.getElementById("vantara-analyze-award").addEventListener("click", async () => {
-    await analyzeStructuredAward(award);
   });
 }
 
@@ -358,57 +419,81 @@ function buildDetectedAwardHtml(award) {
   `;
 }
 
+function getChromeStorage(keys) {
+  return new Promise((resolve) => {
+    if (!chrome?.storage?.local) {
+      resolve({});
+      return;
+    }
+
+    chrome.storage.local.get(keys, (data) => {
+      resolve(data || {});
+    });
+  });
+}
+
 async function analyzeStructuredAward(award) {
   const status = document.getElementById("vantara-panel-status");
   const content = document.getElementById("vantara-panel-content");
-  const button = document.getElementById("vantara-analyze-award");
 
-  status.textContent = "Analyzing with Vantara...";
-  button.disabled = true;
-  button.textContent = "Analyzing...";
+  try {
+    const storageData = await getChromeStorage([
+      "wallet",
+      "walletCards",
+      "bookingBasics",
+    ]);
 
-  chrome.storage.local.get(["wallet", "walletCards", "bookingBasics"], async (data) => {
+    const primaryWallet = getPrimaryWalletCardFromStorage(storageData);
+    const bookingBasics = storageData.bookingBasics || {};
+
+    status.textContent = "Finding comparable cash fare...";
+
+    const response = await fetch(VANTARA_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...award,
+        card: primaryWallet.card,
+        balance: primaryWallet.balance,
+        passengers: bookingBasics.passengers || 1,
+        cabin: award.cabin || bookingBasics.cabin || "Economy",
+      }),
+    });
+
+    status.textContent = "Calculating redemption value...";
+
+    const responseText = await response.text();
+
+    let result;
     try {
-      const primaryWallet = getPrimaryWalletCardFromStorage(data);
-      const bookingBasics = data.bookingBasics || {};
-
-      const response = await fetch(VANTARA_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...award,
-          card: primaryWallet.card,
-          balance: primaryWallet.balance,
-          passengers: bookingBasics.passengers || 1,
-          cabin: award.cabin || bookingBasics.cabin || "Economy",
-        }),
-      });
-
-      const responseText = await response.text();
-
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch {
-        throw new Error(responseText.slice(0, 120));
-      }
-
-      if (!response.ok) {
-        throw new Error(result.error || "Vantara analysis failed.");
-      }
-
-      content.innerHTML = buildAnalysisHtml(result);
-      status.textContent = "Analysis complete.";
-      button.remove();
-    } catch (error) {
-      console.error(error);
-      status.textContent = error.message || "Something went wrong.";
-      button.disabled = false;
-      button.textContent = "Analyze redemption";
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error(responseText.slice(0, 120));
     }
-  });
+
+    if (!response.ok) {
+      throw new Error(result.error || "Vantara analysis failed.");
+    }
+
+    content.innerHTML = buildAnalysisHtml(result);
+    status.textContent = "Analysis complete.";
+  } catch (error) {
+    console.error(error);
+
+    content.innerHTML = `
+      <div style="margin-top:14px;border:1px solid rgba(248,113,113,0.35);background:rgba(127,29,29,0.18);padding:14px;border-radius:12px;">
+        <p style="margin:0 0 8px;color:#c084fc;font-size:10px;letter-spacing:0.24em;text-transform:uppercase;">Vantara error</p>
+        <h3 style="margin:0;color:white;font-size:22px;">Could not analyze this award</h3>
+        <p style="margin:10px 0 0;color:#cbd5e1;font-size:13px;line-height:1.45;">
+          ${escapeHtml(error.message || "Something went wrong.")}
+        </p>
+      </div>
+    `;
+
+    status.textContent = "Analysis failed.";
+  }
 }
 
 function getPrimaryWalletCardFromStorage(data) {
@@ -419,11 +504,12 @@ function getPrimaryWalletCardFromStorage(data) {
     : [];
 
   if (!cards.length) {
-    return {
-      card: "Amex",
-      balance: "",
-    };
-  }
+  return {
+    card: "Amex",
+    balance: "",
+    missingWallet: true,
+  };
+}
 
   return [...cards].sort((a, b) => {
     const aBalance = Number(String(a.balance || "").replace(/,/g, ""));
@@ -451,7 +537,21 @@ function buildAnalysisHtml(data) {
     ? "rgba(120,53,15,0.18)"
     : "rgba(127,29,29,0.18)";
 
-  return `
+  const walletWarning =
+  !data.wallet?.balance
+    ? `
+      <div style="margin-top:14px;border:1px solid rgba(251,191,36,0.35);background:rgba(120,53,15,0.18);padding:13px;border-radius:12px;">
+        <p style="margin:0 0 8px;color:#fbbf24;font-size:10px;letter-spacing:0.24em;text-transform:uppercase;">Wallet not configured</p>
+        <p style="margin:0;color:#fde68a;font-size:13px;line-height:1.45;">
+          Add your transferable points wallet in the Vantara extension popup to see accurate bookability and transfer-path recommendations.
+        </p>
+      </div>
+    `
+    : "";
+
+return `
+    ${walletWarning}
+
     <div style="margin-top:14px;border:1px solid ${border};background:${background};padding:14px;border-radius:12px;">
       <p style="margin:0 0 8px;color:#c084fc;font-size:10px;letter-spacing:0.24em;text-transform:uppercase;">Vantara recommendation</p>
       <h3 style="margin:0;color:white;font-size:24px;line-height:1.15;">${escapeHtml(label)}</h3>
@@ -519,9 +619,11 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+addSummaryRowHints();
 addButtonsToTripCards();
 
 const observer = new MutationObserver(() => {
+  addSummaryRowHints();
   addButtonsToTripCards();
 });
 
