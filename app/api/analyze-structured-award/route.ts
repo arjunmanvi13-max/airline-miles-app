@@ -54,15 +54,17 @@ export async function POST(request: Request) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            origin: body.origin,
-            destination: body.destination,
-            departureDate: body.departureDate,
-            cabin,
-            passengers,
-            airline: body.airline || "",
-            flightNumber: body.flightNumber || "",
-            isNonstop: Boolean(body.isNonstop),
-          }),
+  origin: body.origin,
+  destination: body.destination,
+  departureDate: body.departureDate,
+  cabin,
+  passengers,
+  airline: body.airline || "",
+  flightNumber: body.flightNumber || "",
+  departureTime: body.departureTime || "",
+  arrivalTime: body.arrivalTime || "",
+  isNonstop: Boolean(body.isNonstop),
+}),
         }
       );
 

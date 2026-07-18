@@ -812,25 +812,73 @@ export const getBookingDecision = ({
   canBook: boolean;
   centsPerPoint: number | null;
 }) => {
+  const walletWasEntered = walletFitScore !== null;
+
   if (redemptionScore === null && centsPerPoint === null) {
     return {
       label: "Needs more data",
       tone: "neutral",
       explanation:
-        "Add a cash price to judge redemption value more accurately.",
+        "A cash price is needed to judge this redemption more accurately.",
     };
   }
 
+  /*
+    No wallet was entered.
+
+    Vantara should judge redemption value normally, but must not claim
+    the user cannot book or tell them not to transfer because of missing
+    wallet information.
+  */
+  if (!walletWasEntered) {
+    if (centsPerPoint !== null && centsPerPoint < 1.1) {
+      return {
+        label: "Consider paying cash",
+        tone: "bad",
+        explanation:
+          "The redemption value appears weak compared with the available cash fare. Add your wallet for personalized bookability and transfer analysis.",
+      };
+    }
+
+    if ((redemptionScore ?? 0) >= 80) {
+      return {
+        label: "Excellent redemption",
+        tone: "strong",
+        explanation:
+          "This award appears to offer excellent value. Add your wallet to calculate point coverage and personalized transfer options.",
+      };
+    }
+
+    if ((redemptionScore ?? 0) >= 70) {
+      return {
+        label: "Strong redemption",
+        tone: "strong",
+        explanation:
+          "This award appears to offer strong value. Add your wallet to calculate bookability and personalized transfer options.",
+      };
+    }
+
+    return {
+      label: "Compare before booking",
+      tone: "wallet",
+      explanation:
+        "This award may offer reasonable value. Your wallet has not been entered, so Vantara cannot calculate bookability or a personalized transfer path yet.",
+    };
+  }
+
+  /*
+    A wallet exists, but it does not cover the best transfer path.
+  */
   if (!canBook) {
     return {
-      label: "Do not transfer yet",
+      label: "More points needed",
       tone: "warning",
       explanation:
-        "This award may be useful, but your entered wallet balance does not currently cover the best transfer path.",
+        "Your current wallet does not cover the best transfer path. The redemption may still be valuable, but you would need more points or another booking option.",
     };
   }
 
-  if ((redemptionScore ?? 0) >= 80 && (walletFitScore ?? 0) >= 70) {
+  if ((redemptionScore ?? 0) >= 80 && walletFitScore >= 70) {
     return {
       label: "Book with points",
       tone: "strong",
@@ -852,7 +900,7 @@ export const getBookingDecision = ({
     label: "Compare before booking",
     tone: "neutral",
     explanation:
-      "This award may be reasonable, but compare cash price, alternate programs, and transfer risk before booking.",
+      "This award may be reasonable, but compare the cash price, alternate programs, and transfer risk before booking.",
   };
 };
 
