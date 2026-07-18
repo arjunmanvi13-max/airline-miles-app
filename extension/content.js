@@ -33,6 +33,9 @@ const VANTARA_POINT_ME_BUTTON_CLASS = "vantara-point-me-button";
 
 const VANTARA_AWARDTOOL_BUTTON_CLASS = "vantara-awardtool-button";
 
+const VANTARA_SEATSAERO_HINT_CLASS = "vantara-seatsaero-open-hint";
+const VANTARA_READY_NOTICE_ID = "vantara-ready-notice";
+
 let activeAwardToolSession = null;
 
 let activeRoameManualSession = null;
@@ -40,61 +43,7 @@ let activeRoameManualSession = null;
 let activePointMeButton = null;
 
 
-function addOpenCardHint(card) {
-  if (card.querySelector(".vantara-open-hint")) return;
-  if (card.querySelector(`.${VANTARA_CARD_BUTTON_CLASS}`)) return;
 
-  const infoButton = card.querySelector('button, [role="button"]');
-  const actions = card.querySelector(".trip-actions");
-
-  if (actions) return;
-
-  const hint = document.createElement("div");
-  hint.className = "vantara-open-hint";
-  hint.textContent = "Open card to analyze with Vantara";
-
-  hint.style.position = "absolute";
-  hint.style.right = "12px";
-  hint.style.top = "50%";
-  hint.style.transform = "translateY(-50%)";
-  hint.style.border = "1px solid rgba(216, 180, 254, 0.45)";
-  hint.style.background = "rgba(88, 28, 135, 0.35)";
-  hint.style.color = "#f3e8ff";
-  hint.style.padding = "7px 10px";
-  hint.style.borderRadius = "999px";
-  hint.style.fontSize = "12px";
-  hint.style.fontWeight = "800";
-  hint.style.pointerEvents = "none";
-  hint.style.whiteSpace = "nowrap";
-
-  card.style.position = "relative";
-  card.appendChild(hint);
-}
-
-function addSummaryRowHints() {
-  document.querySelectorAll("tbody tr").forEach((row) => {
-    if (row.querySelector(".vantara-summary-hint")) return;
-
-    const infoButton = row.querySelector("button");
-    if (!infoButton) return;
-
-    const lastCell = row.querySelector("td:last-child");
-    if (!lastCell) return;
-
-    const hint = document.createElement("div");
-    hint.className = "vantara-summary-hint";
-    hint.textContent = "Open card to analyze";
-
-    hint.style.marginTop = "6px";
-    hint.style.color = "#d8b4fe";
-    hint.style.fontSize = "11px";
-    hint.style.fontWeight = "800";
-    hint.style.whiteSpace = "nowrap";
-    hint.style.textAlign = "center";
-
-    lastCell.appendChild(hint);
-  });
-}
 
 function isPointsYeahPage() {
   return window.location.hostname.includes("pointsyeah.com");
@@ -487,7 +436,7 @@ function extractPointsYeahAwardPrice(card, text) {
 
 function addButtonsToTripCards() {
   document.querySelectorAll(".trip-card").forEach((card) => {
-    addOpenCardHint(card);
+   
     if (card.querySelector(`.${VANTARA_CARD_BUTTON_CLASS}`)) return;
 
     const actions = card.querySelector(".trip-actions");
@@ -753,12 +702,6 @@ function findDateFromText(text) {
 
 function openVantaraPanel(award) {
   const existing = document.getElementById(VANTARA_PANEL_ID);
-
-if (existing) {
-  closeActiveRoameManualSession();
-  resetActivePointMeButton();
-  existing.remove();
-}
 
 if (existing) {
   closeActiveRoameManualSession();
@@ -2824,14 +2767,338 @@ function closeActiveAwardToolSession() {
   activeAwardToolSession = null;
 }
 
-function initializeVantaraForCurrentSite() {
-  if (window.location.hostname.includes("seats.aero")) {
-    if (typeof addSummaryRowHints === "function") {
-      addSummaryRowHints();
+function addSeatsAeroSummaryHints() {
+  if (!window.location.hostname.includes("seats.aero")) return;
+
+  const detailLinks = Array.from(
+    document.querySelectorAll(
+      'tr[data-slot="table-row"] a.st-detail-link[aria-label="View details"]'
+    )
+  );
+
+  detailLinks.forEach((detailLink) => {
+    const row = detailLink.closest('tr[data-slot="table-row"]');
+    const detailCell = detailLink.closest(
+      'td[data-col-id="detail"]'
+    );
+
+    if (!row || !detailCell) return;
+
+    // Ignore non-result rows.
+    const hasDate = row.querySelector(
+      'td[data-col-id="date"]'
+    );
+
+    const hasAwardPrice = row.querySelector(
+      '[data-slot="cabin-price-badge"]'
+    );
+
+    if (!hasDate || !hasAwardPrice) return;
+
+    // Prevent duplicate hints when Seats.aero re-renders.
+    if (
+      detailCell.querySelector(
+        `.${VANTARA_SEATSAERO_HINT_CLASS}`
+      )
+    ) {
+      return;
     }
 
-    addButtonsToTripCards();
+    detailCell.style.position = "relative";
+    detailCell.style.overflow = "visible";
+
+    Object.assign(detailLink.style, {
+      position: "relative",
+      zIndex: "2",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: "32px",
+      height: "32px",
+      borderRadius: "999px",
+      border: "1px solid rgba(192,132,252,0.78)",
+      background: "rgba(88,28,135,0.16)",
+      boxShadow: "0 0 0 4px rgba(168,85,247,0.12)",
+      color: "#c084fc",
+      transition:
+        "background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease",
+    });
+
+    const hint = document.createElement("span");
+
+    hint.className = VANTARA_SEATSAERO_HINT_CLASS;
+    hint.textContent = "Open to analyze";
+
+    Object.assign(hint.style, {
+      position: "absolute",
+      left: "42px",
+right: "auto",
+top: "50%",
+      transform: "translateY(-50%)",
+      zIndex: "3",
+      padding: "5px 9px",
+      border: "1px solid rgba(192,132,252,0.34)",
+      borderRadius: "999px",
+      background: "rgba(25,10,42,0.96)",
+      color: "#e9d5ff",
+      boxShadow: "0 7px 20px rgba(0,0,0,0.28)",
+      fontSize: "10px",
+      fontWeight: "800",
+      lineHeight: "1",
+      whiteSpace: "nowrap",
+      pointerEvents: "none",
+    });
+
+    detailCell.appendChild(hint);
+
+    detailLink.addEventListener("mouseenter", () => {
+      detailLink.style.background = "rgba(126,34,206,0.28)";
+      detailLink.style.borderColor = "rgba(216,180,254,0.95)";
+      detailLink.style.boxShadow =
+        "0 0 0 5px rgba(168,85,247,0.18)";
+      detailLink.style.transform = "translateY(-1px)";
+    });
+
+    detailLink.addEventListener("mouseleave", () => {
+      detailLink.style.background = "rgba(88,28,135,0.16)";
+      detailLink.style.borderColor = "rgba(192,132,252,0.78)";
+      detailLink.style.boxShadow =
+        "0 0 0 4px rgba(168,85,247,0.12)";
+      detailLink.style.transform = "translateY(0)";
+    });
+  });
+}
+
+function getCurrentVantaraSiteConfig() {
+  const hostname = window.location.hostname;
+
+  if (hostname.includes("seats.aero")) {
+    return {
+      name: "Seats.aero",
+      instruction:
+        "Search for an award, open the result details, then click ✦ Vantara.",
+    };
   }
+
+  if (hostname.includes("pointsyeah.com")) {
+    return {
+      name: "PointsYeah",
+      instruction:
+        "Search for an award and click ✦ Vantara beside the result you want to analyze.",
+    };
+  }
+
+  if (hostname.includes("roame.travel")) {
+    return {
+      name: "Roame",
+      instruction:
+        "Search for an award, expand the result, then click ✦ Analyze with Vantara.",
+    };
+  }
+
+  if (
+    hostname === "point.me" ||
+    hostname === "www.point.me"
+  ) {
+    return {
+      name: "Point.me",
+      instruction:
+        "Search for an award and click ✦ Analyze with Vantara beneath the result.",
+    };
+  }
+
+  if (hostname.includes("awardtool.com")) {
+    return {
+      name: "AwardTool",
+      instruction:
+        "Search for an award, expand the itinerary, then click ✦ Analyze with Vantara.",
+    };
+  }
+
+  return null;
+}
+
+function showVantaraReadyNotice() {
+  const site = getCurrentVantaraSiteConfig();
+
+  if (!site) return;
+
+  if (document.getElementById(VANTARA_READY_NOTICE_ID)) {
+    return;
+  }
+
+  const sessionKey = `vantara-ready-notice-${window.location.hostname}`;
+
+  try {
+    if (sessionStorage.getItem(sessionKey) === "shown") {
+      return;
+    }
+
+    sessionStorage.setItem(sessionKey, "shown");
+  } catch {
+    // Continue even if session storage is unavailable.
+  }
+
+  const notice = document.createElement("div");
+  notice.id = VANTARA_READY_NOTICE_ID;
+
+  Object.assign(notice.style, {
+    position: "fixed",
+    right: "22px",
+    bottom: "22px",
+    width: "340px",
+    maxWidth: "calc(100vw - 32px)",
+    zIndex: "999998",
+    overflow: "hidden",
+    border: "1px solid rgba(192,132,252,0.42)",
+    borderRadius: "16px",
+    background:
+      "linear-gradient(145deg, rgba(15,8,28,0.98), rgba(5,6,10,0.98))",
+    color: "white",
+    boxShadow: "0 24px 70px rgba(0,0,0,0.48)",
+    fontFamily:
+      'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    opacity: "0",
+    transform: "translateY(14px)",
+    transition:
+      "opacity 220ms ease, transform 220ms ease",
+  });
+
+  notice.innerHTML = `
+    <div style="padding:18px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="
+            width:8px;
+            height:8px;
+            border-radius:999px;
+            background:#4ade80;
+            box-shadow:0 0 0 4px rgba(74,222,128,0.12);
+          "></span>
+
+          <p style="
+            margin:0;
+            color:#d8b4fe;
+            font-size:10px;
+            font-weight:800;
+            letter-spacing:0.24em;
+            text-transform:uppercase;
+          ">
+            Vantara active
+          </p>
+        </div>
+
+        <button
+          id="vantara-ready-notice-close"
+          type="button"
+          aria-label="Close Vantara notice"
+          style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            width:30px;
+            height:30px;
+            margin-top:-5px;
+            margin-right:-5px;
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:8px;
+            background:rgba(255,255,255,0.04);
+            color:white;
+            font-size:17px;
+            cursor:pointer;
+          "
+        >
+          ×
+        </button>
+      </div>
+
+      <h3 style="
+        margin:13px 0 0;
+        color:white;
+        font-size:21px;
+        line-height:1.2;
+        font-weight:800;
+      ">
+        Ready on ${escapeHtml(site.name)}
+      </h3>
+
+      <p style="
+        margin:9px 0 0;
+        color:#cbd5e1;
+        font-size:13px;
+        line-height:1.55;
+      ">
+        ${escapeHtml(site.instruction)}
+      </p>
+
+      <div style="
+        margin-top:14px;
+        padding:10px 12px;
+        border:1px solid rgba(192,132,252,0.18);
+        border-radius:10px;
+        background:rgba(88,28,135,0.14);
+        color:#e9d5ff;
+        font-size:12px;
+        line-height:1.45;
+      ">
+        Vantara will appear directly inside supported award results.
+      </div>
+    </div>
+
+    <div
+      id="vantara-ready-progress"
+      style="
+        width:100%;
+        height:3px;
+        background:linear-gradient(90deg,#a855f7,#d8b4fe);
+        transform-origin:left;
+        transform:scaleX(1);
+        transition:transform 9s linear;
+      "
+    ></div>
+  `;
+
+  document.body.appendChild(notice);
+
+  const removeNotice = () => {
+    if (!document.body.contains(notice)) return;
+
+    notice.style.opacity = "0";
+    notice.style.transform = "translateY(14px)";
+
+    window.setTimeout(() => {
+      notice.remove();
+    }, 220);
+  };
+
+  notice
+    .querySelector("#vantara-ready-notice-close")
+    ?.addEventListener("click", removeNotice);
+
+  window.requestAnimationFrame(() => {
+    notice.style.opacity = "1";
+    notice.style.transform = "translateY(0)";
+
+    const progress = notice.querySelector(
+      "#vantara-ready-progress"
+    );
+
+    window.requestAnimationFrame(() => {
+      if (progress) {
+        progress.style.transform = "scaleX(0)";
+      }
+    });
+  });
+
+  window.setTimeout(removeNotice, 9000);
+}
+
+function initializeVantaraForCurrentSite() {
+  showVantaraReadyNotice();
+  if (window.location.hostname.includes("seats.aero")) {
+  addSeatsAeroSummaryHints();
+  addButtonsToTripCards();
+}
 
   if (isPointsYeahPage()) {
     addButtonsToPointsYeahCards();
