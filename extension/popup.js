@@ -7,7 +7,7 @@ const PROGRAM_LABELS = {
   "Wells Fargo": "Wells Fargo Rewards",
 };
 
-const cardInput = document.getElementById("card");
+const programInput = document.getElementById("card");
 const balanceInput = document.getElementById("balance");
 const saveWalletButton = document.getElementById("saveWallet");
 const walletStatus = document.getElementById("walletStatus");
@@ -16,101 +16,136 @@ const walletForm = document.getElementById("walletForm");
 const walletList = document.getElementById("walletList");
 const editWalletButton = document.getElementById("editWallet");
 
-let savedWalletCards = [];
+let savedWalletPrograms = [];
 
 chrome.storage.local.get(["wallet", "walletCards"], (data) => {
   if (Array.isArray(data.walletCards)) {
-    savedWalletCards = data.walletCards;
+    savedWalletPrograms = data.walletCards;
   } else if (data.wallet?.card) {
-    savedWalletCards = [data.wallet];
+    savedWalletPrograms = [data.wallet];
   } else {
-    savedWalletCards = [];
+    savedWalletPrograms = [];
   }
 
   renderWallet();
 });
 
 editWalletButton.addEventListener("click", () => {
-  walletForm.classList.toggle("hidden");
-  editWalletButton.textContent = walletForm.classList.contains("hidden")
-    ? "Add"
-    : "Hide";
+  const isCurrentlyHidden = walletForm.classList.contains("hidden");
+
+  if (isCurrentlyHidden) {
+    walletForm.classList.remove("hidden");
+    editWalletButton.textContent = "Hide";
+    walletStatus.textContent = "";
+    return;
+  }
+
+  walletForm.classList.add("hidden");
+  editWalletButton.textContent = "Add program";
+  walletStatus.textContent = "";
 });
 
 saveWalletButton.addEventListener("click", () => {
-  const walletCard = {
-    card: cardInput.value,
-    balance: balanceInput.value,
+  const walletProgram = {
+    card: programInput.value,
+    balance: balanceInput.value.trim(),
   };
 
-  savedWalletCards = [
-    ...savedWalletCards.filter((item) => item.card !== walletCard.card),
-    walletCard,
+  savedWalletPrograms = [
+    ...savedWalletPrograms.filter(
+      (item) => item.card !== walletProgram.card
+    ),
+    walletProgram,
   ];
 
   chrome.storage.local.set(
     {
-      walletCards: savedWalletCards,
-      wallet: walletCard,
+      walletCards: savedWalletPrograms,
+
+      // Preserve this value for compatibility with any existing analysis
+      // logic that still reads the older single-wallet storage field.
+      wallet: walletProgram,
     },
     () => {
-      walletStatus.textContent = "Wallet source saved.";
+      walletStatus.textContent = "Program added to your wallet.";
       balanceInput.value = "";
-      walletForm.classList.add("hidden");
-      editWalletButton.textContent = "Add";
+
       renderWallet();
     }
   );
 });
 
 function renderWallet() {
-  if (!savedWalletCards.length) {
-    walletPreview.textContent = "No wallet saved yet";
+  if (!savedWalletPrograms.length) {
+    walletPreview.textContent = "No programs added yet";
     walletList.innerHTML = "";
+
     walletForm.classList.remove("hidden");
     editWalletButton.textContent = "Hide";
+
     return;
   }
 
-  const totalPoints = savedWalletCards.reduce((sum, item) => {
-    return sum + Number(String(item.balance || "").replace(/,/g, ""));
+  const totalPoints = savedWalletPrograms.reduce((sum, item) => {
+    return sum + parsePointsBalance(item.balance);
   }, 0);
 
-  walletPreview.textContent = `${savedWalletCards.length} source${
-    savedWalletCards.length === 1 ? "" : "s"
-  } · ${formatNumber(totalPoints)} total points`;
+  const programCount = savedWalletPrograms.length;
+  const programLabel = programCount === 1 ? "program" : "programs";
 
-  walletList.innerHTML = savedWalletCards
-    .map(
-      (item, index) => `
+  if (totalPoints > 0) {
+    walletPreview.textContent =
+      `${programCount} ${programLabel} · ` +
+      `${totalPoints.toLocaleString()} total points`;
+  } else {
+    walletPreview.textContent = `${programCount} ${programLabel} added`;
+  }
+
+  walletList.innerHTML = savedWalletPrograms
+    .map((item, index) => {
+      const formattedBalance = formatNumber(item.balance);
+
+      return `
         <div class="walletRow">
           <div>
             <strong>${PROGRAM_LABELS[item.card] || item.card}</strong>
-            <span>${formatNumber(item.balance) || "Balance not entered"}</span>
+            <span>
+              ${
+                formattedBalance
+                  ? `${formattedBalance} points`
+                  : "Balance not entered"
+              }
+            </span>
           </div>
 
-          <button class="removeWalletCard" data-index="${index}" type="button">
+          <button
+            class="removeWalletCard"
+            data-index="${index}"
+            type="button"
+            aria-label="Remove ${PROGRAM_LABELS[item.card] || item.card}"
+          >
             Remove
           </button>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 
   document.querySelectorAll(".removeWalletCard").forEach((button) => {
     button.addEventListener("click", () => {
-      const indexToRemove = Number(button.getAttribute("data-index"));
+      const indexToRemove = Number(button.dataset.index);
 
-      savedWalletCards = savedWalletCards.filter(
+      savedWalletPrograms = savedWalletPrograms.filter(
         (_, index) => index !== indexToRemove
       );
 
       chrome.storage.local.set(
         {
-          walletCards: savedWalletCards,
-          wallet: savedWalletCards[0] || null,
+          walletCards: savedWalletPrograms,
+          wallet: savedWalletPrograms[0] || null,
         },
         () => {
+          walletStatus.textContent = "";
           renderWallet();
         }
       );
@@ -118,11 +153,22 @@ function renderWallet() {
   });
 
   walletForm.classList.add("hidden");
-  editWalletButton.textContent = "Add";
+  editWalletButton.textContent = "Add program";
+}
+
+function parsePointsBalance(value) {
+  const normalizedValue = String(value || "").replace(/,/g, "").trim();
+  const number = Number(normalizedValue);
+
+  return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
 function formatNumber(value) {
-  const number = Number(String(value || "").replace(/,/g, ""));
-  if (!number) return "";
+  const number = parsePointsBalance(value);
+
+  if (!number) {
+    return "";
+  }
+
   return number.toLocaleString();
 }

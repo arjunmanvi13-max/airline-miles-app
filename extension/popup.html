@@ -11,20 +11,24 @@
       <header class="hero">
         <p class="eyebrow">Award travel intelligence</p>
         <h1>Vantara</h1>
+
         <p class="subtitle">
-          Start by adding your transferable points wallet. Then open Seats.aero and click ✦ Analyze on any expanded award card.
+          Add your transferable points programs, then analyze award flights
+          directly across supported search sites.
         </p>
       </header>
 
       <section class="card walletCard">
         <div class="sectionHeader">
           <div>
-            <h2>Your Award Wallet</h2>
-            <p id="walletPreview" class="walletPreview">No wallet saved yet</p>
+            <h2>Your Points Wallet</h2>
+            <p id="walletPreview" class="walletPreview">
+              No programs added yet
+            </p>
           </div>
 
           <button id="editWallet" class="smallButton" type="button">
-            Add
+            Add program
           </button>
         </div>
 
@@ -32,7 +36,7 @@
 
         <div id="walletForm" class="walletForm hidden">
           <label>
-            Transferable program
+            Transferable points program
             <select id="card">
               <option value="Amex">Amex Membership Rewards</option>
               <option value="Chase">Chase Ultimate Rewards</option>
@@ -44,20 +48,43 @@
           </label>
 
           <label>
-            Current balance optional
-            <input id="balance" placeholder="ex: 120000" />
+            Current points balance
+            <input
+              id="balance"
+              inputmode="numeric"
+              placeholder="Optional, for example: 120000"
+            />
           </label>
 
-          <button id="saveWallet" type="button">Save wallet source</button>
+          <button id="saveWallet" type="button">
+            Add program to wallet
+          </button>
+
           <p id="walletStatus" class="status"></p>
         </div>
       </section>
 
       <section class="card readyCard">
-        <p class="kicker">Ready</p>
-        <h2>Analyze awards on Seats.aero</h2>
+        <p class="kicker">Vantara is ready</p>
+
+        <h2>Analyze awards while you search</h2>
+
         <p class="readyText">
-          First, build your wallet above. Then open Seats.aero, click the info button on an award result, and press ✦ Vantara inside the expanded card.
+          Open a supported award-search site, expand an itinerary, and select
+          the ✦ Vantara button to analyze the redemption.
+        </p>
+
+        <div class="supportedSites">
+          <span>Seats.aero</span>
+          <span>PointsYeah</span>
+          <span>Roame</span>
+          <span>Point.me</span>
+          <span>AwardTool</span>
+        </div>
+
+        <p class="walletOptionalNote">
+          Your wallet is optional, but adding your programs lets Vantara provide
+          personalized transfer and points-balance guidance.
         </p>
       </section>
     </main>

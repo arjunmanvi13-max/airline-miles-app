@@ -369,3 +369,39 @@ button:hover {
   min-width: 24px;
   text-align: center;
 }
+
+.readyText {
+  margin: 10px 0 0;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.supportedSites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.supportedSites span {
+  border: 1px solid rgba(216, 180, 254, 0.2);
+  background: rgba(168, 85, 247, 0.1);
+  color: #e9d5ff;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.walletOptionalNote {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+#editWallet {
+  white-space: nowrap;
+}
